@@ -131,8 +131,11 @@ def test_output_tensor_names_match_real_moe_checkpoint(merged):
         assert required in names, f"{required} missing from the merged output"
 
     # dense MLPs must be gone, or the checkpoint is inconsistent
-    assert not any(n.endswith(".mlp.gate_proj.weight") for n in names
-                   if ".shared_expert." not in n and not n.startswith("mtp."))
+    assert not any(
+        n.endswith(".mlp.gate_proj.weight")
+        for n in names
+        if ".shared_expert." not in n and not n.startswith("mtp.")
+    )
 
 
 def test_merged_model_loads_and_runs(merged):
