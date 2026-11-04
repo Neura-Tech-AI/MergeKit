@@ -35,7 +35,7 @@ import yaml
 
 from mergekit.common import ModelReference
 from mergekit.moe.config import Expert, MoEMergeConfig
-from mergekit.moe.qwen3_5 import Qwen3_5MoE
+from mergekit.moe.qwen3_5 import SUPPORTED_MODEL_TYPES, Qwen3_5MoE
 from mergekit.options import MergeOptions
 
 # architecture -> the dense model types it can turn into experts
@@ -44,7 +44,7 @@ DENSE_INPUTS: Dict[str, tuple] = {
     "DeepSeek MoE": ("llama", "mistral"),
     "Qwen MoE": ("llama", "mistral", "qwen2"),
     "Qwen3 MoE": ("qwen3",),
-    "Qwen3.5 MoE": ("qwen3_5_text", "qwen3_5"),
+    "Qwen3.5 MoE": SUPPORTED_MODEL_TYPES,
 }
 
 OK = "  [ok]  "

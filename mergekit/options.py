@@ -161,6 +161,16 @@ def add_merge_options(f: Callable) -> Callable:
             if field_name in kwargs:
                 arg_dict[field_name] = kwargs.pop(field_name)
 
+        # Options that were not passed explicitly sit in click's context
+        # parameters, not in kwargs. Without this a flag such as
+        # `--no-copy-tokenizer` is parsed, then silently discarded, and the
+        # MergeOptions default wins.
+        ctx = click.get_current_context(silent=True)
+        if ctx is not None:
+            for field_name in MergeOptions.model_fields:
+                if field_name not in arg_dict and field_name in ctx.params:
+                    arg_dict[field_name] = ctx.params[field_name]
+
         try:
             kwargs["merge_options"] = MergeOptions(**arg_dict)
         except Exception:
