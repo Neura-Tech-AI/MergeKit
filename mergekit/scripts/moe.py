@@ -89,6 +89,78 @@ def copy_tagalong_files(
     return copied
 
 
+MOE_CARD_TEMPLATE = """---
+base_model: {base_model}
+tags:
+- mergekit
+- merge
+- mixture-of-experts
+library_name: transformers
+---
+
+# {name}
+
+This is a Mixture-of-Experts model built with [mergekit](https://github.com/arcee-ai/mergekit)
+from pre-trained dense language models, using the **{architecture}** output architecture.
+
+## Merge Details
+
+Each expert below is a dense model converted into a set of routed experts. The
+router was generated with `gate_mode: {gate_mode}` and routes each token to
+`{experts_per_token}` expert(s).
+
+| Role | Model | Prompts |
+|---|---|---|
+{expert_rows}
+
+## Configuration
+
+The following YAML configuration was used to produce this model:
+
+```yaml
+{config_yaml}
+```
+"""
+
+
+def generate_moe_card(
+    config: MoEMergeConfig,
+    config_yaml: str,
+    architecture_name: str,
+    out_path: str,
+    name: Optional[str] = None,
+) -> str:
+    """Write a README.md model card for a MoE merge.
+
+    Upstream mergekit only wrote ``mergekit_moe_config.yml`` here; the dense
+    merge path additionally emits a README.md (:func:`mergekit.card.generate_card`).
+    This restores that parity.
+    """
+    if not name:
+        name = "Untitled MoE (1)"
+
+    rows = []
+    for idx, expert in enumerate(config.experts):
+        prompts = ", ".join(expert.positive_prompts or []) or "-"
+        rows.append(f"| expert {idx} | {expert.source_model} | {prompts} |")
+    for idx, expert in enumerate(config.shared_experts or []):
+        prompts = ", ".join(expert.positive_prompts or []) or "always active"
+        rows.append(f"| shared {idx} | {expert.source_model} | {prompts} |")
+
+    card = MOE_CARD_TEMPLATE.format(
+        base_model=config.base_model,
+        name=name,
+        architecture=architecture_name,
+        gate_mode=config.gate_mode,
+        experts_per_token=config.experts_per_token,
+        expert_rows="\n".join(rows),
+        config_yaml=config_yaml,
+    )
+    with open(os.path.join(out_path, "README.md"), "w", encoding="utf-8") as fp:
+        fp.write(card)
+    return card
+
+
 def build(
     config: MoEMergeConfig,
     out_path: str,
@@ -98,6 +170,7 @@ def build(
     device: str = "auto",
     allow_all_same: bool = False,
     verbose: bool = False,
+    config_source: Optional[str] = None,
 ):
     if is_bad_config(config, allow_all_same=allow_all_same):
         sys.exit(1)
@@ -148,6 +221,24 @@ def build(
             shared_router_weights[i, ...] for i in range(router_weights.shape[0])
         ],
     )
+
+    if merge_options.write_model_card:
+        try:
+            if config_source is None:
+                config_source = yaml.dump(
+                    config.model_dump(mode="json", exclude_none=True),
+                    sort_keys=False,
+                )
+            generate_moe_card(
+                config,
+                config_source,
+                architecture_name=out_arch.name(),
+                out_path=out_path,
+                name=os.path.basename(os.path.abspath(out_path)),
+            )
+            logging.info("Wrote README.md model card")
+        except Exception as exc:  # a failed card must never fail the merge
+            logging.warning(f"Could not generate model card: {exc}")
 
     if merge_options.copy_tokenizer:
         logging.info("Saving tokenizer...")
@@ -279,10 +370,10 @@ def main(
         device=merge_options.device,
         allow_all_same=i_understand_this_is_not_useful_without_training,
         verbose=merge_options.verbosity > 0,
+        config_source=config_source,
     )
 
     if merge_options.write_model_card:
-        # TODO: generate a README.md as well
         with open(
             os.path.join(out_path, "mergekit_moe_config.yml"), "w", encoding="utf-8"
         ) as fp:

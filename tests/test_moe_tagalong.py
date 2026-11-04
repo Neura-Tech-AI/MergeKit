@@ -10,6 +10,7 @@ silently dropping `generation_config.json`, `chat_template.jinja`, `vocab.json`,
 """
 
 import os
+import pathlib
 import tempfile
 
 import pytest
@@ -209,3 +210,108 @@ def test_moe_merge_preserves_file_set():
             cfg = json.load(fp)
         assert cfg["model_type"] == "qwen3_5_moe_text"
         assert cfg["num_experts"] == 2
+
+
+# --- input-architecture restrictions (parity with the other MoE archs) ------
+
+
+def test_qwen3_5_moe_rejects_sparse_inputs():
+    """A Qwen3.5-MoE checkpoint has no dense MLP, so it cannot be an expert.
+
+    Every other MoE architecture accepts dense inputs only; Qwen3.5 must match.
+    """
+    from mergekit.moe.qwen3_5 import SUPPORTED_MODEL_TYPES
+
+    assert "qwen3_5_moe_text" not in SUPPORTED_MODEL_TYPES
+    assert "qwen3_5_moe" not in SUPPORTED_MODEL_TYPES
+
+
+def test_dense_input_restriction_matches_sibling_archs():
+    """Siblings reject wrong `model_type` inline; Qwen3.5 must do the same."""
+    from mergekit.moe.config import Expert, MoEMergeConfig
+    from mergekit.moe.qwen3_5 import Qwen3_5MoE
+
+    arch = Qwen3_5MoE()
+    cfg = MoEMergeConfig(
+        base_model="org/base",
+        experts=[Expert(source_model="org/a")],
+        gate_mode="hidden",
+        experts_per_token=1,
+    )
+
+    # every input, including the base, is checked (as in mixtral/deepseek/qwen)
+    checked = []
+    src = pathlib.Path("mergekit/moe/qwen3_5.py").read_text()
+    body = src[src.index("def supports_config") : src.index("def _generate_config")]
+    assert "config.base_model" in body, "base model must be validated too"
+    assert "config.shared_experts" in body, "shared experts must be validated too"
+    assert str(cfg.base_model) == "org/base"
+    assert isinstance(arch.name(), str)
+
+
+# --- README.md model card (dense-path parity) -------------------------------
+
+
+def test_card_template_renders():
+    from mergekit.moe.config import Expert, MoEMergeConfig
+    from mergekit.scripts.moe import generate_moe_card
+
+    cfg = MoEMergeConfig(
+        base_model="org/base",
+        experts=[
+            Expert(source_model="org/a", positive_prompts=["math"]),
+            Expert(source_model="org/b", positive_prompts=["code"]),
+        ],
+        gate_mode="hidden",
+        experts_per_token=2,
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        card = generate_moe_card(
+            cfg, "base_model: org/base\n", "Qwen3.5 MoE", tmp, name="demo"
+        )
+        written = pathlib.Path(tmp, "README.md")
+        assert written.is_file()
+        assert written.read_text() == card
+        assert "mixture-of-experts" in card
+        assert "expert 0" in card and "math" in card
+        assert "shared 0" not in card
+        assert "gate_mode: hidden" in card
+
+
+def test_card_lists_shared_experts():
+    from mergekit.moe.config import Expert, MoEMergeConfig
+    from mergekit.scripts.moe import generate_moe_card
+
+    cfg = MoEMergeConfig(
+        base_model="org/base",
+        experts=[Expert(source_model="org/a")],
+        shared_experts=[Expert(source_model="org/shared")],
+        gate_mode="hidden",
+        experts_per_token=1,
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        card = generate_moe_card(cfg, "", "Qwen3.5 MoE", tmp)
+        assert "org/shared" in card
+        assert "always active" in card
+
+
+def test_card_failure_does_not_break_merge():
+    """A bad card path must be logged, never raised out of build()."""
+    from mergekit.moe.config import Expert, MoEMergeConfig
+    from mergekit.scripts.moe import generate_moe_card
+
+    cfg = MoEMergeConfig(
+        base_model="org/base",
+        experts=[Expert(source_model="org/a")],
+        gate_mode="hidden",
+        experts_per_token=1,
+    )
+    missing = "/nonexistent-dir-xyz"
+    with pytest.raises(OSError):
+        generate_moe_card(cfg, "", "Qwen3.5 MoE", missing)
+
+    src = pathlib.Path("mergekit/scripts/moe.py").read_text()
+    body = src[src.index("if merge_options.write_model_card") :]
+    body = body[body.index("try:") :]
+    assert "except Exception" in body
+    assert "Could not generate model card" in body

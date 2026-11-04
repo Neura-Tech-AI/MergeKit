@@ -142,6 +142,19 @@ The Qwen3.5 tokenizer keeps modality markers like `<|image_pad|>` even in the
 text-only checkpoint, which is why shipping the raw tokenizer files instead of
 only a reserialised object matters.
 
+## What can be used as an expert?
+
+Only **dense** Qwen3.5 checkpoints (`qwen3_5_text`, `qwen3_5`). Every other MoE
+output in mergekit is built by sweeping up a dense `mlp.gate_proj` / `up_proj` /
+`down_proj` triple, and a Qwen3.5-MoE checkpoint stores `mlp.experts.gate_up_proj`
+instead — there is no dense MLP to lift, so using one as a base or expert fails.
+This matches Mixtral (llama/mistral only), DeepSeek (llama/mistral only) and
+Qwen (llama/mistral/qwen2 only). Passing a `qwen3_5_moe*` model raises a
+specific warning rather than a confusing missing-tensor error.
+
+The output is still a standard `qwen3_5_moe_text` checkpoint that loads and can
+itself be merged by the dense path.
+
 ## Usage
 
 ```yaml

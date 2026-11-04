@@ -54,11 +54,14 @@ LANGUAGE_MODEL_PREFIXES: Tuple[str, ...] = (
 
 EMBEDDING_MARKERS: Tuple[str, ...] = ("embed_tokens", "lm_head")
 
+# Dense Qwen3.5 checkpoints only. Every other MoE output architecture in mergekit
+# (Mixtral, DeepSeek, Qwen, Qwen3) accepts dense inputs exclusively, because the
+# experts are built from `mlp.gate_proj/up_proj/down_proj`. A Qwen3.5-MoE
+# checkpoint stores `mlp.experts.gate_up_proj` instead and has no dense MLP, so
+# it cannot be used as an expert or as the base model here.
 SUPPORTED_MODEL_TYPES: Tuple[str, ...] = (
     "qwen3_5_text",
     "qwen3_5",
-    "qwen3_5_moe_text",
-    "qwen3_5_moe",
 )
 
 # Config keys that only make sense on a VLM wrapper.
@@ -228,10 +231,17 @@ class Qwen3_5MoE(MoEOutputArchitecture):
                 return False
             if model_cfg.model_type not in SUPPORTED_MODEL_TYPES:
                 if explain:
-                    logging.warning(
-                        "Qwen3.5 MoE only supports Qwen3.5 input models "
-                        f"(got {model_cfg.model_type})"
-                    )
+                    if model_cfg.model_type in ("qwen3_5_moe_text", "qwen3_5_moe"):
+                        logging.warning(
+                            "Qwen3.5 MoE cannot use an already-sparse Qwen3.5-MoE "
+                            "checkpoint as an expert or base model; supply the "
+                            "dense Qwen3.5 models instead."
+                        )
+                    else:
+                        logging.warning(
+                            "Qwen3.5 MoE only supports dense Qwen3.5 input models "
+                            f"(got {model_cfg.model_type})"
+                        )
                 return False
 
         if len(config.shared_experts or []) > 1:
