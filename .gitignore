@@ -159,3 +159,8 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+# Local verification artifacts: merged checkpoints are large binaries, they are
+# reproducible from tools/demo/make_27b_clone.py + moe.yml
+artifacts/**/model.safetensors
+artifacts/**/*.safetensors

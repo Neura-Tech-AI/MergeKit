@@ -1,0 +1,3352 @@
+{
+  "version": "1.0",
+  "truncation": null,
+  "padding": null,
+  "added_tokens": [
+    {
+      "id": 0,
+      "content": "<|endoftext|>",
+      "single_word": false,
+      "lstrip": false,
+      "rstrip": false,
+      "normalized": false,
+      "special": true
+    }
+  ],
+  "normalizer": {
+    "type": "NFC"
+  },
+  "pre_tokenizer": {
+    "type": "Sequence",
+    "pretokenizers": [
+      {
+        "type": "Split",
+        "pattern": {
+          "Regex": "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?[\\p{L}\\p{M}]+|\\p{N}| ?[^\\s\\p{L}\\p{M}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+"
+        },
+        "behavior": "Isolated",
+        "invert": false
+      },
+      {
+        "type": "ByteLevel",
+        "add_prefix_space": false,
+        "trim_offsets": true,
+        "use_regex": false
+      }
+    ]
+  },
+  "post_processor": {
+    "type": "TemplateProcessing",
+    "single": [
+      {
+        "Sequence": {
+          "id": "A",
+          "type_id": 0
+        }
+      }
+    ],
+    "pair": [
+      {
+        "Sequence": {
+          "id": "A",
+          "type_id": 0
+        }
+      },
+      {
+        "Sequence": {
+          "id": "B",
+          "type_id": 1
+        }
+      }
+    ],
+    "special_tokens": {}
+  },
+  "decoder": {
+    "type": "ByteLevel",
+    "add_prefix_space": true,
+    "trim_offsets": true,
+    "use_regex": true
+  },
+  "model": {
+    "type": "BPE",
+    "dropout": null,
+    "unk_token": null,
+    "continuing_subword_prefix": "",
+    "end_of_word_suffix": "",
+    "fuse_unk": false,
+    "byte_fallback": false,
+    "ignore_merges": false,
+    "vocab": {
+      "<|endoftext|>": 0,
+      "a": 1,
+      "b": 2,
+      "c": 3,
+      "d": 4,
+      "e": 5,
+      "f": 6,
+      "g": 7,
+      "h": 8,
+      "i": 9,
+      "j": 10,
+      "k": 11,
+      "l": 12,
+      "m": 13,
+      "n": 14,
+      "o": 15,
+      "p": 16,
+      "q": 17,
+      "r": 18,
+      "s": 19,
+      "t": 20,
+      "u": 21,
+      "v": 22,
+      "w": 23,
+      "x": 24,
+      "y": 25,
+      "z": 26,
+      "Ġ": 27,
+      "Ġt": 28,
+      "Ġth": 29,
+      "Ġthe": 30,
+      "Ġa": 31,
+      "Ġan": 32,
+      "Ġo": 33,
+      "Ġof": 34,
+      "Ġto": 35,
+      "Ġi": 36,
+      "Ġin": 37,
+      "Ġis": 38,
+      "Ġar": 39,
+      "Ġare": 40,
+      "Ġand": 41,
+      "Ġor": 42,
+      "Ġn": 43,
+      "Ġno": 44,
+      "Ġnot": 45,
+      "Ġf": 46,
+      "Ġfo": 47,
+      "Ġfor": 48,
+      "Ġw": 49,
+      "Ġwi": 50,
+      "Ġwit": 51,
+      "Ġwith": 52,
+      "Ġtha": 53,
+      "Ġthat": 54,
+      "Ġthi": 55,
+      "Ġthis": 56,
+      "Ġit": 57,
+      "Ġas": 58,
+      "Ġat": 59,
+      "Ġb": 60,
+      "Ġbe": 61,
+      "Ġby": 62,
+      "Ġfr": 63,
+      "Ġfro": 64,
+      "Ġfrom": 65,
+      "Ġon": 66,
+      "Ġwa": 67,
+      "Ġwas": 68,
+      "Ġwe": 69,
+      "Ġwer": 70,
+      "Ġwere": 71,
+      "Ġwh": 72,
+      "Ġwhi": 73,
+      "Ġwhic": 74,
+      "Ġwhich": 75,
+      "Ġwha": 76,
+      "Ġwhat": 77,
+      "Ġwhe": 78,
+      "Ġwhen": 79,
+      "Ġwher": 80,
+      "Ġwhere": 81,
+      "Ġwho": 82,
+      "Ġh": 83,
+      "Ġho": 84,
+      "Ġhow": 85,
+      "Ġwhy": 86,
+      "Ġc": 87,
+      "Ġca": 88,
+      "Ġcan": 89,
+      "Ġwr": 90,
+      "Ġwri": 91,
+      "Ġwrit": 92,
+      "Ġwrite": 93,
+      "Ġco": 94,
+      "Ġcod": 95,
+      "Ġcode": 96,
+      "Ġfu": 97,
+      "Ġfun": 98,
+      "Ġfunc": 99,
+      "Ġfunct": 100,
+      "Ġfuncti": 101,
+      "Ġfunctio": 102,
+      "Ġfunction": 103,
+      "Ġp": 104,
+      "Ġpy": 105,
+      "Ġpyt": 106,
+      "Ġpyth": 107,
+      "Ġpytho": 108,
+      "Ġpython": 109,
+      "Ġj": 110,
+      "Ġjs": 111,
+      "Ġjso": 112,
+      "Ġjson": 113,
+      "Ġpa": 114,
+      "Ġpar": 115,
+      "Ġpars": 116,
+      "Ġparse": 117,
+      "Ġe": 118,
+      "Ġer": 119,
+      "Ġerr": 120,
+      "Ġerro": 121,
+      "Ġerror": 122,
+      "Ġha": 123,
+      "Ġhan": 124,
+      "Ġhand": 125,
+      "Ġhandl": 126,
+      "Ġhandle": 127,
+      "Ġd": 128,
+      "Ġde": 129,
+      "Ġdeb": 130,
+      "Ġdebu": 131,
+      "Ġdebug": 132,
+      "Ġs": 133,
+      "Ġst": 134,
+      "Ġsta": 135,
+      "Ġstac": 136,
+      "Ġstack": 137,
+      "Ġtr": 138,
+      "Ġtra": 139,
+      "Ġtrac": 140,
+      "Ġtrace": 141,
+      "Ġex": 142,
+      "Ġexp": 143,
+      "Ġexpl": 144,
+      "Ġexpla": 145,
+      "Ġexplai": 146,
+      "Ġexplain": 147,
+      "Ġr": 148,
+      "Ġro": 149,
+      "Ġroo": 150,
+      "Ġroot": 151,
+      "Ġcau": 152,
+      "Ġcaus": 153,
+      "Ġcause": 154,
+      "Ġre": 155,
+      "Ġref": 156,
+      "Ġrefa": 157,
+      "Ġrefac": 158,
+      "Ġrefact": 159,
+      "Ġrefacto": 160,
+      "Ġrefactor": 161,
+      "Ġm": 162,
+      "Ġma": 163,
+      "Ġmak": 164,
+      "Ġmake": 165,
+      "Ġrea": 166,
+      "Ġread": 167,
+      "Ġreada": 168,
+      "Ġreadab": 169,
+      "Ġreadabl": 170,
+      "Ġreadable": 171,
+      "Ġmat": 172,
+      "Ġmath": 173,
+      "Ġpr": 174,
+      "Ġpro": 175,
+      "Ġprov": 176,
+      "Ġprove": 177,
+      "Ġsq": 178,
+      "Ġsqu": 179,
+      "Ġsqua": 180,
+      "Ġsquar": 181,
+      "Ġsquare": 182,
+      "Ġsqr": 183,
+      "Ġsqrt": 184,
+      "Ġir": 185,
+      "Ġirr": 186,
+      "Ġirra": 187,
+      "Ġirrat": 188,
+      "Ġirrati": 189,
+      "Ġirratio": 190,
+      "Ġirration": 191,
+      "Ġirrationa": 192,
+      "Ġirrational": 193,
+      "Ġste": 194,
+      "Ġstep": 195,
+      "Ġso": 196,
+      "Ġsol": 197,
+      "Ġsolv": 198,
+      "Ġsolve": 199,
+      "Ġprob": 200,
+      "Ġprobl": 201,
+      "Ġproble": 202,
+      "Ġproblem": 203,
+      "Ġcar": 204,
+      "Ġcare": 205,
+      "Ġcaref": 206,
+      "Ġcarefu": 207,
+      "Ġcareful": 208,
+      "Ġcarefull": 209,
+      "Ġcarefully": 210,
+      "Ġv": 211,
+      "Ġve": 212,
+      "Ġver": 213,
+      "Ġveri": 214,
+      "Ġverif": 215,
+      "Ġverify": 216,
+      "Ġans": 217,
+      "Ġansw": 218,
+      "Ġanswe": 219,
+      "Ġanswer": 220,
+      "Ġthin": 221,
+      "Ġthink": 222,
+      "Ġl": 223,
+      "Ġlo": 224,
+      "Ġlog": 225,
+      "Ġlogi": 226,
+      "Ġlogic": 227,
+      "Ġpu": 228,
+      "Ġpuz": 229,
+      "Ġpuzz": 230,
+      "Ġpuzzl": 231,
+      "Ġpuzzle": 232,
+      "Ġbef": 233,
+      "Ġbefo": 234,
+      "Ġbefor": 235,
+      "Ġbefore": 236,
+      "Ġansweri": 237,
+      "Ġanswerin": 238,
+      "Ġanswering": 239,
+      "Ġsto": 240,
+      "Ġstor": 241,
+      "Ġstory": 242,
+      "Ġsh": 243,
+      "Ġsho": 244,
+      "Ġshor": 245,
+      "Ġshort": 246,
+      "Ġli": 247,
+      "Ġlig": 248,
+      "Ġligh": 249,
+      "Ġlight": 250,
+      "Ġlighth": 251,
+      "Ġlightho": 252,
+      "Ġlighthou": 253,
+      "Ġlighthous": 254,
+      "Ġlighthouse": 255,
+      "Ġk": 256,
+      "Ġke": 257,
+      "Ġkee": 258,
+      "Ġkeep": 259,
+      "Ġkeepe": 260,
+      "Ġkeeper": 261,
+      "Ġdes": 262,
+      "Ġdesc": 263,
+      "Ġdescr": 264,
+      "Ġdescri": 265,
+      "Ġdescrib": 266,
+      "Ġdescribe": 267,
+      "Ġsc": 268,
+      "Ġsce": 269,
+      "Ġscen": 270,
+      "Ġscene": 271,
+      "Ġvi": 272,
+      "Ġviv": 273,
+      "Ġvivi": 274,
+      "Ġvivid": 275,
+      "Ġpo": 276,
+      "Ġpoe": 277,
+      "Ġpoet": 278,
+      "Ġpoeti": 279,
+      "Ġpoetic": 280,
+      "Ġla": 281,
+      "Ġlan": 282,
+      "Ġlang": 283,
+      "Ġlangu": 284,
+      "Ġlangua": 285,
+      "Ġlanguag": 286,
+      "Ġlanguage": 287,
+      "Ġcon": 288,
+      "Ġcont": 289,
+      "Ġconti": 290,
+      "Ġcontin": 291,
+      "Ġcontinu": 292,
+      "Ġcontinue": 293,
+      "Ġna": 294,
+      "Ġnar": 295,
+      "Ġnarr": 296,
+      "Ġnarra": 297,
+      "Ġnarrat": 298,
+      "Ġnarrati": 299,
+      "Ġnarrativ": 300,
+      "Ġnarrative": 301,
+      "Ġen": 302,
+      "Ġeng": 303,
+      "Ġenga": 304,
+      "Ġengag": 305,
+      "Ġengagi": 306,
+      "Ġengagin": 307,
+      "Ġengaging": 308,
+      "Ġsty": 309,
+      "Ġstyl": 310,
+      "Ġstyle": 311,
+      "Ġrec": 312,
+      "Ġrecu": 313,
+      "Ġrecur": 314,
+      "Ġrecurs": 315,
+      "Ġrecursi": 316,
+      "Ġrecursio": 317,
+      "Ġrecursion": 318,
+      "Ġrecursiv": 319,
+      "Ġrecursive": 320,
+      "Ġal": 321,
+      "Ġalg": 322,
+      "Ġalgo": 323,
+      "Ġalgor": 324,
+      "Ġalgori": 325,
+      "Ġalgorit": 326,
+      "Ġalgorith": 327,
+      "Ġalgorithm": 328,
+      "Ġda": 329,
+      "Ġdat": 330,
+      "Ġdata": 331,
+      "Ġstr": 332,
+      "Ġstru": 333,
+      "Ġstruc": 334,
+      "Ġstruct": 335,
+      "Ġstructu": 336,
+      "Ġstructur": 337,
+      "Ġstructure": 338,
+      "Ġlis": 339,
+      "Ġlist": 340,
+      "Ġarr": 341,
+      "Ġarra": 342,
+      "Ġarray": 343,
+      "Ġnu": 344,
+      "Ġnum": 345,
+      "Ġnumb": 346,
+      "Ġnumbe": 347,
+      "Ġnumber": 348,
+      "Ġnumbers": 349,
+      "Ġtheo": 350,
+      "Ġtheor": 351,
+      "Ġtheore": 352,
+      "Ġtheorem": 353,
+      "Ġproo": 354,
+      "Ġproof": 355,
+      "Ġle": 356,
+      "Ġlem": 357,
+      "Ġlemm": 358,
+      "Ġlemma": 359,
+      "Ġther": 360,
+      "Ġthere": 361,
+      "Ġtheref": 362,
+      "Ġtherefo": 363,
+      "Ġtherefor": 364,
+      "Ġtherefore": 365,
+      "Ġbec": 366,
+      "Ġbeca": 367,
+      "Ġbecau": 368,
+      "Ġbecaus": 369,
+      "Ġbecause": 370,
+      "Ġass": 371,
+      "Ġassu": 372,
+      "Ġassum": 373,
+      "Ġassume": 374,
+      "Ġsu": 375,
+      "Ġsup": 376,
+      "Ġsupp": 377,
+      "Ġsuppo": 378,
+      "Ġsuppos": 379,
+      "Ġsuppose": 380,
+      "Ġconc": 381,
+      "Ġconcl": 382,
+      "Ġconclu": 383,
+      "Ġconclud": 384,
+      "Ġconclude": 385,
+      "Ġeq": 386,
+      "Ġequ": 387,
+      "Ġequa": 388,
+      "Ġequal": 389,
+      "Ġequals": 390,
+      "Ġsum": 391,
+      "Ġprod": 392,
+      "Ġprodu": 393,
+      "Ġproduc": 394,
+      "Ġproduct": 395,
+      "Ġpri": 396,
+      "Ġprim": 397,
+      "Ġprime": 398,
+      "Ġev": 399,
+      "Ġeve": 400,
+      "Ġeven": 401,
+      "Ġod": 402,
+      "Ġodd": 403,
+      "Ġint": 404,
+      "Ġinte": 405,
+      "Ġinteg": 406,
+      "Ġintege": 407,
+      "Ġinteger": 408,
+      "Ġreal": 409,
+      "Ġse": 410,
+      "Ġset": 411,
+      "Ġmap": 412,
+      "Ġseq": 413,
+      "Ġsequ": 414,
+      "Ġseque": 415,
+      "Ġsequen": 416,
+      "Ġsequenc": 417,
+      "Ġsequence": 418,
+      "Ġlim": 419,
+      "Ġlimi": 420,
+      "Ġlimit": 421,
+      "Ġder": 422,
+      "Ġderi": 423,
+      "Ġderiv": 424,
+      "Ġderiva": 425,
+      "Ġderivat": 426,
+      "Ġderivati": 427,
+      "Ġderivativ": 428,
+      "Ġderivative": 429,
+      "Ġintegr": 430,
+      "Ġintegra": 431,
+      "Ġintegral": 432,
+      "Ġg": 433,
+      "Ġgr": 434,
+      "Ġgra": 435,
+      "Ġgrad": 436,
+      "Ġgradi": 437,
+      "Ġgradie": 438,
+      "Ġgradien": 439,
+      "Ġgradient": 440,
+      "Ġlos": 441,
+      "Ġloss": 442,
+      "Ġmo": 443,
+      "Ġmod": 444,
+      "Ġmode": 445,
+      "Ġmodel": 446,
+      "Ġtrai": 447,
+      "Ġtrain": 448,
+      "Ġtraini": 449,
+      "Ġtrainin": 450,
+      "Ġtraining": 451,
+      "Ġme": 452,
+      "Ġmer": 453,
+      "Ġmerg": 454,
+      "Ġmerge": 455,
+      "Ġrou": 456,
+      "Ġrout": 457,
+      "Ġroute": 458,
+      "Ġrouter": 459,
+      "Ġexpe": 460,
+      "Ġexper": 461,
+      "Ġexpert": 462,
+      "Ġexperts": 463,
+      "Ġtok": 464,
+      "Ġtoke": 465,
+      "Ġtoken": 466,
+      "Ġtokens": 467,
+      "Ġlay": 468,
+      "Ġlaye": 469,
+      "Ġlayer": 470,
+      "Ġatt": 471,
+      "Ġatte": 472,
+      "Ġatten": 473,
+      "Ġattent": 474,
+      "Ġattenti": 475,
+      "Ġattentio": 476,
+      "Ġattention": 477,
+      "Ġlin": 478,
+      "Ġline": 479,
+      "Ġlinea": 480,
+      "Ġlinear": 481,
+      "Ġhy": 482,
+      "Ġhyb": 483,
+      "Ġhybr": 484,
+      "Ġhybri": 485,
+      "Ġhybrid": 486,
+      "Ġou": 487,
+      "Ġout": 488,
+      "Ġoutp": 489,
+      "Ġoutpu": 490,
+      "Ġoutput": 491,
+      "Ġinp": 492,
+      "Ġinpu": 493,
+      "Ġinput": 494,
+      "Ġwei": 495,
+      "Ġweig": 496,
+      "Ġweigh": 497,
+      "Ġweight": 498,
+      "Ġweights": 499,
+      "Ġte": 500,
+      "Ġten": 501,
+      "Ġtens": 502,
+      "Ġtenso": 503,
+      "Ġtensor": 504,
+      "Ġsha": 505,
+      "Ġshar": 506,
+      "Ġshard": 507,
+      "Ġconf": 508,
+      "Ġconfi": 509,
+      "Ġconfig": 510,
+      "Ġtes": 511,
+      "Ġtest": 512,
+      "Ġtests": 513,
+      "Ġpas": 514,
+      "Ġpass": 515,
+      "Ġfa": 516,
+      "Ġfai": 517,
+      "Ġfail": 518,
+      "Ġq": 519,
+      "Ġqu": 520,
+      "Ġqui": 521,
+      "Ġquic": 522,
+      "Ġquick": 523,
+      "Ġbr": 524,
+      "Ġbro": 525,
+      "Ġbrow": 526,
+      "Ġbrown": 527,
+      "Ġfox": 528,
+      "Ġju": 529,
+      "Ġjum": 530,
+      "Ġjump": 531,
+      "Ġjumps": 532,
+      "Ġov": 533,
+      "Ġove": 534,
+      "Ġover": 535,
+      "Ġlaz": 536,
+      "Ġlazy": 537,
+      "Ġdo": 538,
+      "Ġdog": 539,
+      "Ġhe": 540,
+      "Ġhel": 541,
+      "Ġhell": 542,
+      "Ġhello": 543,
+      "Ġwo": 544,
+      "Ġwor": 545,
+      "Ġworl": 546,
+      "Ġworld": 547,
+      "Ġgo": 548,
+      "Ġgoo": 549,
+      "Ġgood": 550,
+      "Ġba": 551,
+      "Ġbad": 552,
+      "Ġbes": 553,
+      "Ġbest": 554,
+      "Ġwors": 555,
+      "Ġworst": 556,
+      "Ġfas": 557,
+      "Ġfast": 558,
+      "Ġsl": 559,
+      "Ġslo": 560,
+      "Ġslow": 561,
+      "Ġbi": 562,
+      "Ġbig": 563,
+      "Ġsm": 564,
+      "Ġsma": 565,
+      "Ġsmal": 566,
+      "Ġsmall": 567,
+      "Ġlon": 568,
+      "Ġlong": 569,
+      "Ġfi": 570,
+      "Ġfir": 571,
+      "Ġfirs": 572,
+      "Ġfirst": 573,
+      "Ġlas": 574,
+      "Ġlast": 575,
+      "Ġne": 576,
+      "Ġnex": 577,
+      "Ġnext": 578,
+      "Ġpre": 579,
+      "Ġprev": 580,
+      "Ġprevi": 581,
+      "Ġprevio": 582,
+      "Ġpreviou": 583,
+      "Ġprevious": 584,
+      "Ġtru": 585,
+      "Ġtrue": 586,
+      "Ġfal": 587,
+      "Ġfals": 588,
+      "Ġfalse": 589,
+      "Ġcl": 590,
+      "Ġcla": 591,
+      "Ġclas": 592,
+      "Ġclass": 593,
+      "Ġdef": 594,
+      "Ġret": 595,
+      "Ġretu": 596,
+      "Ġretur": 597,
+      "Ġreturn": 598,
+      "Ġim": 599,
+      "Ġimp": 600,
+      "Ġimpo": 601,
+      "Ġimpor": 602,
+      "Ġimport": 603,
+      "Ġif": 604,
+      "Ġel": 605,
+      "Ġels": 606,
+      "Ġelse": 607,
+      "Ġwhil": 608,
+      "Ġwhile": 609,
+      "Ġloo": 610,
+      "Ġloop": 611,
+      "Ġind": 612,
+      "Ġinde": 613,
+      "Ġindex": 614,
+      "Ġva": 615,
+      "Ġval": 616,
+      "Ġvalu": 617,
+      "Ġvalue": 618,
+      "Ġkey": 619,
+      "Ġdi": 620,
+      "Ġdic": 621,
+      "Ġdict": 622,
+      "Ġstri": 623,
+      "Ġstrin": 624,
+      "Ġstring": 625,
+      "Ġfl": 626,
+      "Ġflo": 627,
+      "Ġfloa": 628,
+      "Ġfloat": 629,
+      "Ġbo": 630,
+      "Ġboo": 631,
+      "Ġbool": 632,
+      "Ġnon": 633,
+      "Ġnone": 634,
+      "Ġsou": 635,
+      "Ġsout": 636,
+      "Ġsouth": 637,
+      "Ġnor": 638,
+      "Ġnort": 639,
+      "Ġnorth": 640,
+      "Ġea": 641,
+      "Ġeas": 642,
+      "Ġeast": 643,
+      "Ġwes": 644,
+      "Ġwest": 645,
+      "Ġday": 646,
+      "Ġni": 647,
+      "Ġnig": 648,
+      "Ġnigh": 649,
+      "Ġnight": 650,
+      "Ġdar": 651,
+      "Ġdark": 652,
+      "Ġsea": 653,
+      "Ġwav": 654,
+      "Ġwave": 655,
+      "Ġwin": 656,
+      "Ġwind": 657,
+      "Ġston": 658,
+      "Ġstone": 659,
+      "Ġtow": 660,
+      "Ġtowe": 661,
+      "Ġtower": 662,
+      "Ġstar": 663,
+      "Ġsk": 664,
+      "Ġsky": 665,
+      "Ġri": 666,
+      "Ġriv": 667,
+      "Ġrive": 668,
+      "Ġriver": 669,
+      "Ġmou": 670,
+      "Ġmoun": 671,
+      "Ġmount": 672,
+      "Ġmounta": 673,
+      "Ġmountai": 674,
+      "Ġmountain": 675
+    },
+    "merges": [
+      [
+        "Ġo",
+        "f"
+      ],
+      [
+        "Ġi",
+        "s"
+      ],
+      [
+        "Ġar",
+        "e"
+      ],
+      [
+        "Ġan",
+        "d"
+      ],
+      [
+        "Ġo",
+        "r"
+      ],
+      [
+        "Ġno",
+        "t"
+      ],
+      [
+        "Ġfo",
+        "r"
+      ],
+      [
+        "Ġwi",
+        "t"
+      ],
+      [
+        "Ġwit",
+        "h"
+      ],
+      [
+        "Ġth",
+        "a"
+      ],
+      [
+        "Ġtha",
+        "t"
+      ],
+      [
+        "Ġthi",
+        "s"
+      ],
+      [
+        "Ġi",
+        "t"
+      ],
+      [
+        "Ġb",
+        "y"
+      ],
+      [
+        "Ġf",
+        "r"
+      ],
+      [
+        "Ġfr",
+        "o"
+      ],
+      [
+        "Ġfro",
+        "m"
+      ],
+      [
+        "Ġo",
+        "n"
+      ],
+      [
+        "Ġwa",
+        "s"
+      ],
+      [
+        "Ġwe",
+        "r"
+      ],
+      [
+        "Ġwer",
+        "e"
+      ],
+      [
+        "Ġwhi",
+        "c"
+      ],
+      [
+        "Ġwhic",
+        "h"
+      ],
+      [
+        "Ġwh",
+        "a"
+      ],
+      [
+        "Ġwha",
+        "t"
+      ],
+      [
+        "Ġwhe",
+        "n"
+      ],
+      [
+        "Ġwh",
+        "e"
+      ],
+      [
+        "Ġwhe",
+        "r"
+      ],
+      [
+        "Ġwher",
+        "e"
+      ],
+      [
+        "Ġwh",
+        "o"
+      ],
+      [
+        "Ġh",
+        "o"
+      ],
+      [
+        "Ġho",
+        "w"
+      ],
+      [
+        "Ġwh",
+        "y"
+      ],
+      [
+        "Ġca",
+        "n"
+      ],
+      [
+        "Ġw",
+        "r"
+      ],
+      [
+        "Ġwr",
+        "i"
+      ],
+      [
+        "Ġwri",
+        "t"
+      ],
+      [
+        "Ġwrit",
+        "e"
+      ],
+      [
+        "Ġco",
+        "d"
+      ],
+      [
+        "Ġcod",
+        "e"
+      ],
+      [
+        "Ġf",
+        "u"
+      ],
+      [
+        "Ġfu",
+        "n"
+      ],
+      [
+        "Ġfun",
+        "c"
+      ],
+      [
+        "Ġfunc",
+        "t"
+      ],
+      [
+        "Ġfunct",
+        "i"
+      ],
+      [
+        "Ġfuncti",
+        "o"
+      ],
+      [
+        "Ġfunctio",
+        "n"
+      ],
+      [
+        "Ġp",
+        "y"
+      ],
+      [
+        "Ġpy",
+        "t"
+      ],
+      [
+        "Ġpyt",
+        "h"
+      ],
+      [
+        "Ġpyth",
+        "o"
+      ],
+      [
+        "Ġpytho",
+        "n"
+      ],
+      [
+        "Ġj",
+        "s"
+      ],
+      [
+        "Ġjs",
+        "o"
+      ],
+      [
+        "Ġjso",
+        "n"
+      ],
+      [
+        "Ġpa",
+        "r"
+      ],
+      [
+        "Ġpar",
+        "s"
+      ],
+      [
+        "Ġpars",
+        "e"
+      ],
+      [
+        "Ġe",
+        "r"
+      ],
+      [
+        "Ġer",
+        "r"
+      ],
+      [
+        "Ġerr",
+        "o"
+      ],
+      [
+        "Ġerro",
+        "r"
+      ],
+      [
+        "Ġh",
+        "a"
+      ],
+      [
+        "Ġha",
+        "n"
+      ],
+      [
+        "Ġhan",
+        "d"
+      ],
+      [
+        "Ġhand",
+        "l"
+      ],
+      [
+        "Ġhandl",
+        "e"
+      ],
+      [
+        "Ġde",
+        "b"
+      ],
+      [
+        "Ġdeb",
+        "u"
+      ],
+      [
+        "Ġdebu",
+        "g"
+      ],
+      [
+        "Ġsta",
+        "c"
+      ],
+      [
+        "Ġstac",
+        "k"
+      ],
+      [
+        "Ġtra",
+        "c"
+      ],
+      [
+        "Ġtrac",
+        "e"
+      ],
+      [
+        "Ġexp",
+        "l"
+      ],
+      [
+        "Ġexpl",
+        "a"
+      ],
+      [
+        "Ġexpla",
+        "i"
+      ],
+      [
+        "Ġexplai",
+        "n"
+      ],
+      [
+        "Ġro",
+        "o"
+      ],
+      [
+        "Ġroo",
+        "t"
+      ],
+      [
+        "Ġca",
+        "u"
+      ],
+      [
+        "Ġcau",
+        "s"
+      ],
+      [
+        "Ġcaus",
+        "e"
+      ],
+      [
+        "Ġre",
+        "f"
+      ],
+      [
+        "Ġref",
+        "a"
+      ],
+      [
+        "Ġrefa",
+        "c"
+      ],
+      [
+        "Ġrefac",
+        "t"
+      ],
+      [
+        "Ġrefact",
+        "o"
+      ],
+      [
+        "Ġrefacto",
+        "r"
+      ],
+      [
+        "Ġma",
+        "k"
+      ],
+      [
+        "Ġmak",
+        "e"
+      ],
+      [
+        "Ġrea",
+        "d"
+      ],
+      [
+        "Ġread",
+        "a"
+      ],
+      [
+        "Ġreada",
+        "b"
+      ],
+      [
+        "Ġreadab",
+        "l"
+      ],
+      [
+        "Ġreadabl",
+        "e"
+      ],
+      [
+        "Ġma",
+        "t"
+      ],
+      [
+        "Ġmat",
+        "h"
+      ],
+      [
+        "Ġpro",
+        "v"
+      ],
+      [
+        "Ġprov",
+        "e"
+      ],
+      [
+        "Ġsq",
+        "u"
+      ],
+      [
+        "Ġsqu",
+        "a"
+      ],
+      [
+        "Ġsqua",
+        "r"
+      ],
+      [
+        "Ġsquar",
+        "e"
+      ],
+      [
+        "Ġs",
+        "q"
+      ],
+      [
+        "Ġsq",
+        "r"
+      ],
+      [
+        "Ġsqr",
+        "t"
+      ],
+      [
+        "Ġi",
+        "r"
+      ],
+      [
+        "Ġir",
+        "r"
+      ],
+      [
+        "Ġirr",
+        "a"
+      ],
+      [
+        "Ġirra",
+        "t"
+      ],
+      [
+        "Ġirrat",
+        "i"
+      ],
+      [
+        "Ġirrati",
+        "o"
+      ],
+      [
+        "Ġirratio",
+        "n"
+      ],
+      [
+        "Ġirration",
+        "a"
+      ],
+      [
+        "Ġirrationa",
+        "l"
+      ],
+      [
+        "Ġst",
+        "e"
+      ],
+      [
+        "Ġste",
+        "p"
+      ],
+      [
+        "Ġso",
+        "l"
+      ],
+      [
+        "Ġsol",
+        "v"
+      ],
+      [
+        "Ġsolv",
+        "e"
+      ],
+      [
+        "Ġpro",
+        "b"
+      ],
+      [
+        "Ġprob",
+        "l"
+      ],
+      [
+        "Ġprobl",
+        "e"
+      ],
+      [
+        "Ġproble",
+        "m"
+      ],
+      [
+        "Ġc",
+        "a"
+      ],
+      [
+        "Ġca",
+        "r"
+      ],
+      [
+        "Ġcar",
+        "e"
+      ],
+      [
+        "Ġcare",
+        "f"
+      ],
+      [
+        "Ġcaref",
+        "u"
+      ],
+      [
+        "Ġcarefu",
+        "l"
+      ],
+      [
+        "Ġcareful",
+        "l"
+      ],
+      [
+        "Ġcarefull",
+        "y"
+      ],
+      [
+        "Ġv",
+        "e"
+      ],
+      [
+        "Ġve",
+        "r"
+      ],
+      [
+        "Ġver",
+        "i"
+      ],
+      [
+        "Ġveri",
+        "f"
+      ],
+      [
+        "Ġverif",
+        "y"
+      ],
+      [
+        "Ġth",
+        "i"
+      ],
+      [
+        "Ġthi",
+        "n"
+      ],
+      [
+        "Ġthin",
+        "k"
+      ],
+      [
+        "Ġlo",
+        "g"
+      ],
+      [
+        "Ġlog",
+        "i"
+      ],
+      [
+        "Ġlogi",
+        "c"
+      ],
+      [
+        "Ġp",
+        "u"
+      ],
+      [
+        "Ġpu",
+        "z"
+      ],
+      [
+        "Ġpuz",
+        "z"
+      ],
+      [
+        "Ġpuzz",
+        "l"
+      ],
+      [
+        "Ġpuzzl",
+        "e"
+      ],
+      [
+        "Ġbe",
+        "f"
+      ],
+      [
+        "Ġbef",
+        "o"
+      ],
+      [
+        "Ġbefo",
+        "r"
+      ],
+      [
+        "Ġbefor",
+        "e"
+      ],
+      [
+        "Ġa",
+        "n"
+      ],
+      [
+        "Ġan",
+        "s"
+      ],
+      [
+        "Ġans",
+        "w"
+      ],
+      [
+        "Ġansw",
+        "e"
+      ],
+      [
+        "Ġanswe",
+        "r"
+      ],
+      [
+        "Ġanswer",
+        "i"
+      ],
+      [
+        "Ġansweri",
+        "n"
+      ],
+      [
+        "Ġanswerin",
+        "g"
+      ],
+      [
+        "Ġsto",
+        "r"
+      ],
+      [
+        "Ġstor",
+        "y"
+      ],
+      [
+        "Ġlight",
+        "h"
+      ],
+      [
+        "Ġlighth",
+        "o"
+      ],
+      [
+        "Ġlightho",
+        "u"
+      ],
+      [
+        "Ġlighthou",
+        "s"
+      ],
+      [
+        "Ġlighthous",
+        "e"
+      ],
+      [
+        "Ġke",
+        "e"
+      ],
+      [
+        "Ġkee",
+        "p"
+      ],
+      [
+        "Ġkeep",
+        "e"
+      ],
+      [
+        "Ġkeepe",
+        "r"
+      ],
+      [
+        "Ġde",
+        "s"
+      ],
+      [
+        "Ġdes",
+        "c"
+      ],
+      [
+        "Ġdesc",
+        "r"
+      ],
+      [
+        "Ġdescr",
+        "i"
+      ],
+      [
+        "Ġdescri",
+        "b"
+      ],
+      [
+        "Ġdescrib",
+        "e"
+      ],
+      [
+        "Ġs",
+        "c"
+      ],
+      [
+        "Ġsc",
+        "e"
+      ],
+      [
+        "Ġsce",
+        "n"
+      ],
+      [
+        "Ġscen",
+        "e"
+      ],
+      [
+        "Ġv",
+        "i"
+      ],
+      [
+        "Ġvi",
+        "v"
+      ],
+      [
+        "Ġviv",
+        "i"
+      ],
+      [
+        "Ġvivi",
+        "d"
+      ],
+      [
+        "Ġp",
+        "o"
+      ],
+      [
+        "Ġpo",
+        "e"
+      ],
+      [
+        "Ġpoe",
+        "t"
+      ],
+      [
+        "Ġpoet",
+        "i"
+      ],
+      [
+        "Ġpoeti",
+        "c"
+      ],
+      [
+        "Ġla",
+        "n"
+      ],
+      [
+        "Ġlan",
+        "g"
+      ],
+      [
+        "Ġlang",
+        "u"
+      ],
+      [
+        "Ġlangu",
+        "a"
+      ],
+      [
+        "Ġlangua",
+        "g"
+      ],
+      [
+        "Ġlanguag",
+        "e"
+      ],
+      [
+        "Ġcon",
+        "t"
+      ],
+      [
+        "Ġcont",
+        "i"
+      ],
+      [
+        "Ġconti",
+        "n"
+      ],
+      [
+        "Ġcontin",
+        "u"
+      ],
+      [
+        "Ġcontinu",
+        "e"
+      ],
+      [
+        "Ġn",
+        "a"
+      ],
+      [
+        "Ġna",
+        "r"
+      ],
+      [
+        "Ġnar",
+        "r"
+      ],
+      [
+        "Ġnarr",
+        "a"
+      ],
+      [
+        "Ġnarra",
+        "t"
+      ],
+      [
+        "Ġnarrat",
+        "i"
+      ],
+      [
+        "Ġnarrati",
+        "v"
+      ],
+      [
+        "Ġnarrativ",
+        "e"
+      ],
+      [
+        "Ġe",
+        "n"
+      ],
+      [
+        "Ġen",
+        "g"
+      ],
+      [
+        "Ġeng",
+        "a"
+      ],
+      [
+        "Ġenga",
+        "g"
+      ],
+      [
+        "Ġengag",
+        "i"
+      ],
+      [
+        "Ġengagi",
+        "n"
+      ],
+      [
+        "Ġengagin",
+        "g"
+      ],
+      [
+        "Ġst",
+        "y"
+      ],
+      [
+        "Ġsty",
+        "l"
+      ],
+      [
+        "Ġstyl",
+        "e"
+      ],
+      [
+        "Ġrecursi",
+        "o"
+      ],
+      [
+        "Ġrecursio",
+        "n"
+      ],
+      [
+        "Ġre",
+        "c"
+      ],
+      [
+        "Ġrec",
+        "u"
+      ],
+      [
+        "Ġrecu",
+        "r"
+      ],
+      [
+        "Ġrecur",
+        "s"
+      ],
+      [
+        "Ġrecurs",
+        "i"
+      ],
+      [
+        "Ġrecursi",
+        "v"
+      ],
+      [
+        "Ġrecursiv",
+        "e"
+      ],
+      [
+        "Ġa",
+        "l"
+      ],
+      [
+        "Ġal",
+        "g"
+      ],
+      [
+        "Ġalg",
+        "o"
+      ],
+      [
+        "Ġalgo",
+        "r"
+      ],
+      [
+        "Ġalgor",
+        "i"
+      ],
+      [
+        "Ġalgori",
+        "t"
+      ],
+      [
+        "Ġalgorit",
+        "h"
+      ],
+      [
+        "Ġalgorith",
+        "m"
+      ],
+      [
+        "Ġda",
+        "t"
+      ],
+      [
+        "Ġdat",
+        "a"
+      ],
+      [
+        "Ġstr",
+        "u"
+      ],
+      [
+        "Ġstru",
+        "c"
+      ],
+      [
+        "Ġstruc",
+        "t"
+      ],
+      [
+        "Ġstruct",
+        "u"
+      ],
+      [
+        "Ġstructu",
+        "r"
+      ],
+      [
+        "Ġstructur",
+        "e"
+      ],
+      [
+        "Ġli",
+        "s"
+      ],
+      [
+        "Ġlis",
+        "t"
+      ],
+      [
+        "Ġa",
+        "r"
+      ],
+      [
+        "Ġar",
+        "r"
+      ],
+      [
+        "Ġarr",
+        "a"
+      ],
+      [
+        "Ġarra",
+        "y"
+      ],
+      [
+        "Ġn",
+        "u"
+      ],
+      [
+        "Ġnu",
+        "m"
+      ],
+      [
+        "Ġnum",
+        "b"
+      ],
+      [
+        "Ġnumb",
+        "e"
+      ],
+      [
+        "Ġnumbe",
+        "r"
+      ],
+      [
+        "Ġnumber",
+        "s"
+      ],
+      [
+        "Ġthe",
+        "o"
+      ],
+      [
+        "Ġtheo",
+        "r"
+      ],
+      [
+        "Ġtheor",
+        "e"
+      ],
+      [
+        "Ġtheore",
+        "m"
+      ],
+      [
+        "Ġpro",
+        "o"
+      ],
+      [
+        "Ġproo",
+        "f"
+      ],
+      [
+        "Ġl",
+        "e"
+      ],
+      [
+        "Ġle",
+        "m"
+      ],
+      [
+        "Ġlem",
+        "m"
+      ],
+      [
+        "Ġlemm",
+        "a"
+      ],
+      [
+        "Ġt",
+        "h"
+      ],
+      [
+        "Ġth",
+        "e"
+      ],
+      [
+        "Ġthe",
+        "r"
+      ],
+      [
+        "Ġther",
+        "e"
+      ],
+      [
+        "Ġthere",
+        "f"
+      ],
+      [
+        "Ġtheref",
+        "o"
+      ],
+      [
+        "Ġtherefo",
+        "r"
+      ],
+      [
+        "Ġtherefor",
+        "e"
+      ],
+      [
+        "Ġbe",
+        "c"
+      ],
+      [
+        "Ġbec",
+        "a"
+      ],
+      [
+        "Ġbeca",
+        "u"
+      ],
+      [
+        "Ġbecau",
+        "s"
+      ],
+      [
+        "Ġbecaus",
+        "e"
+      ],
+      [
+        "Ġa",
+        "s"
+      ],
+      [
+        "Ġas",
+        "s"
+      ],
+      [
+        "Ġass",
+        "u"
+      ],
+      [
+        "Ġassu",
+        "m"
+      ],
+      [
+        "Ġassum",
+        "e"
+      ],
+      [
+        "Ġsu",
+        "p"
+      ],
+      [
+        "Ġsup",
+        "p"
+      ],
+      [
+        "Ġsupp",
+        "o"
+      ],
+      [
+        "Ġsuppo",
+        "s"
+      ],
+      [
+        "Ġsuppos",
+        "e"
+      ],
+      [
+        "Ġcon",
+        "c"
+      ],
+      [
+        "Ġconc",
+        "l"
+      ],
+      [
+        "Ġconcl",
+        "u"
+      ],
+      [
+        "Ġconclu",
+        "d"
+      ],
+      [
+        "Ġconclud",
+        "e"
+      ],
+      [
+        "Ġe",
+        "q"
+      ],
+      [
+        "Ġeq",
+        "u"
+      ],
+      [
+        "Ġequ",
+        "a"
+      ],
+      [
+        "Ġequa",
+        "l"
+      ],
+      [
+        "Ġequal",
+        "s"
+      ],
+      [
+        "Ġs",
+        "u"
+      ],
+      [
+        "Ġsu",
+        "m"
+      ],
+      [
+        "Ġpr",
+        "o"
+      ],
+      [
+        "Ġpro",
+        "d"
+      ],
+      [
+        "Ġprod",
+        "u"
+      ],
+      [
+        "Ġprodu",
+        "c"
+      ],
+      [
+        "Ġproduc",
+        "t"
+      ],
+      [
+        "Ġpr",
+        "i"
+      ],
+      [
+        "Ġpri",
+        "m"
+      ],
+      [
+        "Ġprim",
+        "e"
+      ],
+      [
+        "Ġe",
+        "v"
+      ],
+      [
+        "Ġev",
+        "e"
+      ],
+      [
+        "Ġeve",
+        "n"
+      ],
+      [
+        "Ġo",
+        "d"
+      ],
+      [
+        "Ġod",
+        "d"
+      ],
+      [
+        "Ġre",
+        "a"
+      ],
+      [
+        "Ġrea",
+        "l"
+      ],
+      [
+        "Ġse",
+        "t"
+      ],
+      [
+        "Ġm",
+        "a"
+      ],
+      [
+        "Ġma",
+        "p"
+      ],
+      [
+        "Ġse",
+        "q"
+      ],
+      [
+        "Ġseq",
+        "u"
+      ],
+      [
+        "Ġsequ",
+        "e"
+      ],
+      [
+        "Ġseque",
+        "n"
+      ],
+      [
+        "Ġsequen",
+        "c"
+      ],
+      [
+        "Ġsequenc",
+        "e"
+      ],
+      [
+        "Ġli",
+        "m"
+      ],
+      [
+        "Ġlim",
+        "i"
+      ],
+      [
+        "Ġlimi",
+        "t"
+      ],
+      [
+        "Ġde",
+        "r"
+      ],
+      [
+        "Ġder",
+        "i"
+      ],
+      [
+        "Ġderi",
+        "v"
+      ],
+      [
+        "Ġderiv",
+        "a"
+      ],
+      [
+        "Ġderiva",
+        "t"
+      ],
+      [
+        "Ġderivat",
+        "i"
+      ],
+      [
+        "Ġderivati",
+        "v"
+      ],
+      [
+        "Ġderivativ",
+        "e"
+      ],
+      [
+        "Ġinteg",
+        "r"
+      ],
+      [
+        "Ġintegr",
+        "a"
+      ],
+      [
+        "Ġintegra",
+        "l"
+      ],
+      [
+        "Ġg",
+        "r"
+      ],
+      [
+        "Ġgr",
+        "a"
+      ],
+      [
+        "Ġgra",
+        "d"
+      ],
+      [
+        "Ġgrad",
+        "i"
+      ],
+      [
+        "Ġgradi",
+        "e"
+      ],
+      [
+        "Ġgradie",
+        "n"
+      ],
+      [
+        "Ġgradien",
+        "t"
+      ],
+      [
+        "Ġlo",
+        "s"
+      ],
+      [
+        "Ġlos",
+        "s"
+      ],
+      [
+        "Ġmo",
+        "d"
+      ],
+      [
+        "Ġmod",
+        "e"
+      ],
+      [
+        "Ġmode",
+        "l"
+      ],
+      [
+        "Ġtr",
+        "a"
+      ],
+      [
+        "Ġtra",
+        "i"
+      ],
+      [
+        "Ġtrai",
+        "n"
+      ],
+      [
+        "Ġtrain",
+        "i"
+      ],
+      [
+        "Ġtraini",
+        "n"
+      ],
+      [
+        "Ġtrainin",
+        "g"
+      ],
+      [
+        "Ġm",
+        "e"
+      ],
+      [
+        "Ġme",
+        "r"
+      ],
+      [
+        "Ġmer",
+        "g"
+      ],
+      [
+        "Ġmerg",
+        "e"
+      ],
+      [
+        "Ġr",
+        "o"
+      ],
+      [
+        "Ġro",
+        "u"
+      ],
+      [
+        "Ġrou",
+        "t"
+      ],
+      [
+        "Ġrout",
+        "e"
+      ],
+      [
+        "Ġroute",
+        "r"
+      ],
+      [
+        "Ġe",
+        "x"
+      ],
+      [
+        "Ġex",
+        "p"
+      ],
+      [
+        "Ġexp",
+        "e"
+      ],
+      [
+        "Ġexpe",
+        "r"
+      ],
+      [
+        "Ġexper",
+        "t"
+      ],
+      [
+        "Ġexpert",
+        "s"
+      ],
+      [
+        "Ġto",
+        "k"
+      ],
+      [
+        "Ġtok",
+        "e"
+      ],
+      [
+        "Ġtoke",
+        "n"
+      ],
+      [
+        "Ġtoken",
+        "s"
+      ],
+      [
+        "Ġla",
+        "y"
+      ],
+      [
+        "Ġlay",
+        "e"
+      ],
+      [
+        "Ġlaye",
+        "r"
+      ],
+      [
+        "Ġ",
+        "a"
+      ],
+      [
+        "Ġa",
+        "t"
+      ],
+      [
+        "Ġat",
+        "t"
+      ],
+      [
+        "Ġatt",
+        "e"
+      ],
+      [
+        "Ġatte",
+        "n"
+      ],
+      [
+        "Ġatten",
+        "t"
+      ],
+      [
+        "Ġattent",
+        "i"
+      ],
+      [
+        "Ġattenti",
+        "o"
+      ],
+      [
+        "Ġattentio",
+        "n"
+      ],
+      [
+        "Ġli",
+        "n"
+      ],
+      [
+        "Ġlin",
+        "e"
+      ],
+      [
+        "Ġline",
+        "a"
+      ],
+      [
+        "Ġlinea",
+        "r"
+      ],
+      [
+        "Ġh",
+        "y"
+      ],
+      [
+        "Ġhy",
+        "b"
+      ],
+      [
+        "Ġhyb",
+        "r"
+      ],
+      [
+        "Ġhybr",
+        "i"
+      ],
+      [
+        "Ġhybri",
+        "d"
+      ],
+      [
+        "Ġo",
+        "u"
+      ],
+      [
+        "Ġou",
+        "t"
+      ],
+      [
+        "Ġout",
+        "p"
+      ],
+      [
+        "Ġoutp",
+        "u"
+      ],
+      [
+        "Ġoutpu",
+        "t"
+      ],
+      [
+        "Ġin",
+        "p"
+      ],
+      [
+        "Ġinp",
+        "u"
+      ],
+      [
+        "Ġinpu",
+        "t"
+      ],
+      [
+        "Ġwe",
+        "i"
+      ],
+      [
+        "Ġwei",
+        "g"
+      ],
+      [
+        "Ġweig",
+        "h"
+      ],
+      [
+        "Ġweigh",
+        "t"
+      ],
+      [
+        "Ġweight",
+        "s"
+      ],
+      [
+        "Ġte",
+        "n"
+      ],
+      [
+        "Ġten",
+        "s"
+      ],
+      [
+        "Ġtens",
+        "o"
+      ],
+      [
+        "Ġtenso",
+        "r"
+      ],
+      [
+        "Ġsh",
+        "a"
+      ],
+      [
+        "Ġsha",
+        "r"
+      ],
+      [
+        "Ġshar",
+        "d"
+      ],
+      [
+        "Ġc",
+        "o"
+      ],
+      [
+        "Ġco",
+        "n"
+      ],
+      [
+        "Ġcon",
+        "f"
+      ],
+      [
+        "Ġconf",
+        "i"
+      ],
+      [
+        "Ġconfi",
+        "g"
+      ],
+      [
+        "Ġt",
+        "e"
+      ],
+      [
+        "Ġte",
+        "s"
+      ],
+      [
+        "Ġtes",
+        "t"
+      ],
+      [
+        "Ġtest",
+        "s"
+      ],
+      [
+        "Ġp",
+        "a"
+      ],
+      [
+        "Ġpa",
+        "s"
+      ],
+      [
+        "Ġpas",
+        "s"
+      ],
+      [
+        "Ġfa",
+        "i"
+      ],
+      [
+        "Ġfai",
+        "l"
+      ],
+      [
+        "Ġ",
+        "q"
+      ],
+      [
+        "Ġq",
+        "u"
+      ],
+      [
+        "Ġqu",
+        "i"
+      ],
+      [
+        "Ġqui",
+        "c"
+      ],
+      [
+        "Ġquic",
+        "k"
+      ],
+      [
+        "Ġb",
+        "r"
+      ],
+      [
+        "Ġbr",
+        "o"
+      ],
+      [
+        "Ġbro",
+        "w"
+      ],
+      [
+        "Ġbrow",
+        "n"
+      ],
+      [
+        "Ġf",
+        "o"
+      ],
+      [
+        "Ġfo",
+        "x"
+      ],
+      [
+        "Ġ",
+        "j"
+      ],
+      [
+        "Ġj",
+        "u"
+      ],
+      [
+        "Ġju",
+        "m"
+      ],
+      [
+        "Ġjum",
+        "p"
+      ],
+      [
+        "Ġjump",
+        "s"
+      ],
+      [
+        "Ġ",
+        "o"
+      ],
+      [
+        "Ġo",
+        "v"
+      ],
+      [
+        "Ġov",
+        "e"
+      ],
+      [
+        "Ġove",
+        "r"
+      ],
+      [
+        "Ġla",
+        "z"
+      ],
+      [
+        "Ġlaz",
+        "y"
+      ],
+      [
+        "Ġd",
+        "o"
+      ],
+      [
+        "Ġdo",
+        "g"
+      ],
+      [
+        "Ġ",
+        "h"
+      ],
+      [
+        "Ġh",
+        "e"
+      ],
+      [
+        "Ġhe",
+        "l"
+      ],
+      [
+        "Ġhel",
+        "l"
+      ],
+      [
+        "Ġhell",
+        "o"
+      ],
+      [
+        "Ġwor",
+        "l"
+      ],
+      [
+        "Ġworl",
+        "d"
+      ],
+      [
+        "Ġ",
+        "g"
+      ],
+      [
+        "Ġg",
+        "o"
+      ],
+      [
+        "Ġgo",
+        "o"
+      ],
+      [
+        "Ġgoo",
+        "d"
+      ],
+      [
+        "Ġb",
+        "a"
+      ],
+      [
+        "Ġba",
+        "d"
+      ],
+      [
+        "Ġb",
+        "e"
+      ],
+      [
+        "Ġbe",
+        "s"
+      ],
+      [
+        "Ġbes",
+        "t"
+      ],
+      [
+        "Ġw",
+        "o"
+      ],
+      [
+        "Ġwo",
+        "r"
+      ],
+      [
+        "Ġwor",
+        "s"
+      ],
+      [
+        "Ġwors",
+        "t"
+      ],
+      [
+        "Ġfa",
+        "s"
+      ],
+      [
+        "Ġfas",
+        "t"
+      ],
+      [
+        "Ġs",
+        "l"
+      ],
+      [
+        "Ġsl",
+        "o"
+      ],
+      [
+        "Ġslo",
+        "w"
+      ],
+      [
+        "Ġb",
+        "i"
+      ],
+      [
+        "Ġbi",
+        "g"
+      ],
+      [
+        "Ġs",
+        "m"
+      ],
+      [
+        "Ġsm",
+        "a"
+      ],
+      [
+        "Ġsma",
+        "l"
+      ],
+      [
+        "Ġsmal",
+        "l"
+      ],
+      [
+        "Ġlo",
+        "n"
+      ],
+      [
+        "Ġlon",
+        "g"
+      ],
+      [
+        "Ġs",
+        "h"
+      ],
+      [
+        "Ġsh",
+        "o"
+      ],
+      [
+        "Ġsho",
+        "r"
+      ],
+      [
+        "Ġshor",
+        "t"
+      ],
+      [
+        "Ġf",
+        "i"
+      ],
+      [
+        "Ġfi",
+        "r"
+      ],
+      [
+        "Ġfir",
+        "s"
+      ],
+      [
+        "Ġfirs",
+        "t"
+      ],
+      [
+        "Ġl",
+        "a"
+      ],
+      [
+        "Ġla",
+        "s"
+      ],
+      [
+        "Ġlas",
+        "t"
+      ],
+      [
+        "Ġn",
+        "e"
+      ],
+      [
+        "Ġne",
+        "x"
+      ],
+      [
+        "Ġnex",
+        "t"
+      ],
+      [
+        "Ġ",
+        "p"
+      ],
+      [
+        "Ġp",
+        "r"
+      ],
+      [
+        "Ġpr",
+        "e"
+      ],
+      [
+        "Ġpre",
+        "v"
+      ],
+      [
+        "Ġprev",
+        "i"
+      ],
+      [
+        "Ġprevi",
+        "o"
+      ],
+      [
+        "Ġprevio",
+        "u"
+      ],
+      [
+        "Ġpreviou",
+        "s"
+      ],
+      [
+        "Ġt",
+        "r"
+      ],
+      [
+        "Ġtr",
+        "u"
+      ],
+      [
+        "Ġtru",
+        "e"
+      ],
+      [
+        "Ġf",
+        "a"
+      ],
+      [
+        "Ġfa",
+        "l"
+      ],
+      [
+        "Ġfal",
+        "s"
+      ],
+      [
+        "Ġfals",
+        "e"
+      ],
+      [
+        "Ġ",
+        "c"
+      ],
+      [
+        "Ġc",
+        "l"
+      ],
+      [
+        "Ġcl",
+        "a"
+      ],
+      [
+        "Ġcla",
+        "s"
+      ],
+      [
+        "Ġclas",
+        "s"
+      ],
+      [
+        "Ġd",
+        "e"
+      ],
+      [
+        "Ġde",
+        "f"
+      ],
+      [
+        "Ġr",
+        "e"
+      ],
+      [
+        "Ġre",
+        "t"
+      ],
+      [
+        "Ġret",
+        "u"
+      ],
+      [
+        "Ġretu",
+        "r"
+      ],
+      [
+        "Ġretur",
+        "n"
+      ],
+      [
+        "Ġi",
+        "m"
+      ],
+      [
+        "Ġim",
+        "p"
+      ],
+      [
+        "Ġimp",
+        "o"
+      ],
+      [
+        "Ġimpo",
+        "r"
+      ],
+      [
+        "Ġimpor",
+        "t"
+      ],
+      [
+        "Ġi",
+        "f"
+      ],
+      [
+        "Ġe",
+        "l"
+      ],
+      [
+        "Ġel",
+        "s"
+      ],
+      [
+        "Ġels",
+        "e"
+      ],
+      [
+        "Ġw",
+        "h"
+      ],
+      [
+        "Ġwh",
+        "i"
+      ],
+      [
+        "Ġwhi",
+        "l"
+      ],
+      [
+        "Ġwhil",
+        "e"
+      ],
+      [
+        "Ġl",
+        "o"
+      ],
+      [
+        "Ġlo",
+        "o"
+      ],
+      [
+        "Ġloo",
+        "p"
+      ],
+      [
+        "Ġin",
+        "d"
+      ],
+      [
+        "Ġind",
+        "e"
+      ],
+      [
+        "Ġinde",
+        "x"
+      ],
+      [
+        "Ġ",
+        "v"
+      ],
+      [
+        "Ġv",
+        "a"
+      ],
+      [
+        "Ġva",
+        "l"
+      ],
+      [
+        "Ġval",
+        "u"
+      ],
+      [
+        "Ġvalu",
+        "e"
+      ],
+      [
+        "Ġ",
+        "k"
+      ],
+      [
+        "Ġk",
+        "e"
+      ],
+      [
+        "Ġke",
+        "y"
+      ],
+      [
+        "Ġd",
+        "i"
+      ],
+      [
+        "Ġdi",
+        "c"
+      ],
+      [
+        "Ġdic",
+        "t"
+      ],
+      [
+        "Ġst",
+        "r"
+      ],
+      [
+        "Ġstr",
+        "i"
+      ],
+      [
+        "Ġstri",
+        "n"
+      ],
+      [
+        "Ġstrin",
+        "g"
+      ],
+      [
+        "Ġ",
+        "i"
+      ],
+      [
+        "Ġi",
+        "n"
+      ],
+      [
+        "Ġin",
+        "t"
+      ],
+      [
+        "Ġint",
+        "e"
+      ],
+      [
+        "Ġinte",
+        "g"
+      ],
+      [
+        "Ġinteg",
+        "e"
+      ],
+      [
+        "Ġintege",
+        "r"
+      ],
+      [
+        "Ġ",
+        "f"
+      ],
+      [
+        "Ġf",
+        "l"
+      ],
+      [
+        "Ġfl",
+        "o"
+      ],
+      [
+        "Ġflo",
+        "a"
+      ],
+      [
+        "Ġfloa",
+        "t"
+      ],
+      [
+        "Ġ",
+        "b"
+      ],
+      [
+        "Ġb",
+        "o"
+      ],
+      [
+        "Ġbo",
+        "o"
+      ],
+      [
+        "Ġboo",
+        "l"
+      ],
+      [
+        "Ġno",
+        "n"
+      ],
+      [
+        "Ġnon",
+        "e"
+      ],
+      [
+        "Ġs",
+        "o"
+      ],
+      [
+        "Ġso",
+        "u"
+      ],
+      [
+        "Ġsou",
+        "t"
+      ],
+      [
+        "Ġsout",
+        "h"
+      ],
+      [
+        "Ġn",
+        "o"
+      ],
+      [
+        "Ġno",
+        "r"
+      ],
+      [
+        "Ġnor",
+        "t"
+      ],
+      [
+        "Ġnort",
+        "h"
+      ],
+      [
+        "Ġ",
+        "e"
+      ],
+      [
+        "Ġe",
+        "a"
+      ],
+      [
+        "Ġea",
+        "s"
+      ],
+      [
+        "Ġeas",
+        "t"
+      ],
+      [
+        "Ġw",
+        "e"
+      ],
+      [
+        "Ġwe",
+        "s"
+      ],
+      [
+        "Ġwes",
+        "t"
+      ],
+      [
+        "Ġda",
+        "y"
+      ],
+      [
+        "Ġ",
+        "n"
+      ],
+      [
+        "Ġn",
+        "i"
+      ],
+      [
+        "Ġni",
+        "g"
+      ],
+      [
+        "Ġnig",
+        "h"
+      ],
+      [
+        "Ġnigh",
+        "t"
+      ],
+      [
+        "Ġ",
+        "l"
+      ],
+      [
+        "Ġl",
+        "i"
+      ],
+      [
+        "Ġli",
+        "g"
+      ],
+      [
+        "Ġlig",
+        "h"
+      ],
+      [
+        "Ġligh",
+        "t"
+      ],
+      [
+        "Ġ",
+        "d"
+      ],
+      [
+        "Ġd",
+        "a"
+      ],
+      [
+        "Ġda",
+        "r"
+      ],
+      [
+        "Ġdar",
+        "k"
+      ],
+      [
+        "Ġs",
+        "e"
+      ],
+      [
+        "Ġse",
+        "a"
+      ],
+      [
+        "Ġw",
+        "a"
+      ],
+      [
+        "Ġwa",
+        "v"
+      ],
+      [
+        "Ġwav",
+        "e"
+      ],
+      [
+        "Ġ",
+        "w"
+      ],
+      [
+        "Ġw",
+        "i"
+      ],
+      [
+        "Ġwi",
+        "n"
+      ],
+      [
+        "Ġwin",
+        "d"
+      ],
+      [
+        "Ġst",
+        "o"
+      ],
+      [
+        "Ġsto",
+        "n"
+      ],
+      [
+        "Ġston",
+        "e"
+      ],
+      [
+        "Ġ",
+        "t"
+      ],
+      [
+        "Ġt",
+        "o"
+      ],
+      [
+        "Ġto",
+        "w"
+      ],
+      [
+        "Ġtow",
+        "e"
+      ],
+      [
+        "Ġtowe",
+        "r"
+      ],
+      [
+        "Ġs",
+        "t"
+      ],
+      [
+        "Ġst",
+        "a"
+      ],
+      [
+        "Ġsta",
+        "r"
+      ],
+      [
+        "Ġ",
+        "s"
+      ],
+      [
+        "Ġs",
+        "k"
+      ],
+      [
+        "Ġsk",
+        "y"
+      ],
+      [
+        "Ġ",
+        "r"
+      ],
+      [
+        "Ġr",
+        "i"
+      ],
+      [
+        "Ġri",
+        "v"
+      ],
+      [
+        "Ġriv",
+        "e"
+      ],
+      [
+        "Ġrive",
+        "r"
+      ],
+      [
+        "Ġ",
+        "m"
+      ],
+      [
+        "Ġm",
+        "o"
+      ],
+      [
+        "Ġmo",
+        "u"
+      ],
+      [
+        "Ġmou",
+        "n"
+      ],
+      [
+        "Ġmoun",
+        "t"
+      ],
+      [
+        "Ġmount",
+        "a"
+      ],
+      [
+        "Ġmounta",
+        "i"
+      ],
+      [
+        "Ġmountai",
+        "n"
+      ]
+    ]
+  }
+}
