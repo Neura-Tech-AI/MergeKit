@@ -229,6 +229,12 @@ def build(
                     config.model_dump(mode="json", exclude_none=True),
                     sort_keys=False,
                 )
+            with open(
+                os.path.join(out_path, "mergekit_moe_config.yml"),
+                "w",
+                encoding="utf-8",
+            ) as fp:
+                fp.write(config_source)
             generate_moe_card(
                 config,
                 config_source,
@@ -373,11 +379,7 @@ def main(
         config_source=config_source,
     )
 
-    if merge_options.write_model_card:
-        with open(
-            os.path.join(out_path, "mergekit_moe_config.yml"), "w", encoding="utf-8"
-        ) as fp:
-            fp.write(config_source)
+
 
 
 if __name__ == "__main__":

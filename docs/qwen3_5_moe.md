@@ -155,6 +155,49 @@ specific warning rather than a confusing missing-tensor error.
 The output is still a standard `qwen3_5_moe_text` checkpoint that loads and can
 itself be merged by the dense path.
 
+## Verified end to end at 27B geometry
+
+The published 27B checkpoint cannot be downloaded in CI, so
+`tools/demo/make_27b_clone.py` reproduces its architecture exactly and shrinks
+only the widths: **64 layers, 48 linear + 16 full attention** (full attention on
+every 4th layer), `attn_output_gate`, GatedDeltaNet hyper-parameters, untied
+embeddings, partial rotary, mRoPE and an `mtp.*` head.
+
+A real `mergekit-moe` run over three such clones produced a checkpoint with:
+
+| check | result |
+|---|---|
+| tensor names vs a real 27B MoE model | **0 missing**, 0 rank mismatches |
+| `experts.gate_up_proj` | `(3, 2*inter, hidden)`, fused gate+up, as in the real checkpoint |
+| `experts.down_proj` | `(3, hidden, inter)` |
+| `gate.weight` | `(3, hidden)` |
+| `shared_expert_gate.weight` | `(1, hidden)` |
+| `layer_types` | unchanged through the conversion |
+| loads + forward + `generate` | finite logits, token ids in range |
+| tokenizer | encodes and round-trips identically to the source |
+
+`tests/test_moe_real_shape.py` locks all of that in.
+
+## Check the run will fit, before downloading 150 GB
+
+```bash
+python tools/demo/preflight_moe.py moe.yml --out-dir ./merged
+```
+
+It reads only config files and reports input model types, whether the output
+architecture accepts the config, shape agreement (`vocab_size`, `hidden_size`,
+`layer_types`), the resulting parameter count, and free disk/RAM against what
+the merge actually needs. Exit code 1 means the run would fail. For the 27B:
+
+| experts | output | disk (inputs + output) | gate-extraction RAM |
+|---|---|---|---|
+| 2 | 73.1B / 146 GB | ~244 GB | ~49 GB |
+| 3 | 97.5B / 195 GB | ~341 GB | ~49 GB |
+| 4 | 121.8B / 244 GB | ~439 GB | ~49 GB |
+
+`gate_mode: hidden` loads one complete dense model in bf16 to read its hidden
+states; the merging itself only holds one layer's expert MLPs at a time.
+
 ## Usage
 
 ```yaml
