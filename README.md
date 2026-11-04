@@ -379,6 +379,12 @@ mergekit-extract-lora --model finetuned_model_id_or_path --base-model base_model
 
 ## Mixture of Experts Merging
 
+> **Hybrid-attention models:** Qwen3.5 (`qwen3_5_text`, e.g.
+> [Qwen3.8-27B](https://huggingface.co/sartajbhuvaji/unfuse-Qwen3.8-27B-text)) needs the
+> dedicated `Qwen3.5 MoE` output architecture — see
+> [`docs/qwen3_5_moe.md`](docs/qwen3_5_moe.md). Plain `mergekit-yaml` merges work too,
+> now that `qwen3_5` is a registered mergekit architecture.
+
 The `mergekit-moe` script supports merging multiple dense models into a mixture of experts, either for direct use or for further training. For more details see the [`mergekit-moe` documentation](docs/moe.md).
 
 ## Evolutionary Merge Methods

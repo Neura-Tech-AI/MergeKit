@@ -30,7 +30,7 @@ The ten console scripts are available under `.venv/bin/`:
 .venv/bin/python -m pytest tests/ -q
 ```
 
-Current result on this machine: **520 passed, 82 skipped** in ~20s.
+Current result on this machine: **537 passed, 82 skipped** in ~20s.
 The skips are GPU-only or Hugging Face-hub-dependent tests.
 
 ## Network limitation (important)
@@ -65,6 +65,23 @@ max |0.6*a + 0.4*b - merged| = 1.19e-07   -> OK
 ```
 
 A `ties` merge (`density: 0.7`, `normalize: true`, base = model-a) also runs clean.
+
+## Qwen3.5 hybrid-attention fixtures
+
+`tools/demo/make_tiny_qwen35.py` builds ~4M-parameter checkpoints that reproduce the real
+Qwen3.5 layout (hybrid `linear_attn` / `self_attn` layers, a 15-tensor `mtp.*` head, and an
+optional VLM `model.language_model.*` prefix). These exercise the `Qwen3.5 MoE` output
+architecture added for
+[`sartajbhuvaji/unfuse-Qwen3.8-27B-text`](https://huggingface.co/sartajbhuvaji/unfuse-Qwen3.8-27B-text):
+
+```sh
+python tools/demo/make_tiny_qwen35.py --out /tmp/q35
+.venv/bin/mergekit-moe /tmp/q35/moe.yml /tmp/q35/out-moe --copy-tokenizer --device cpu
+python tools/demo/verify_qwen35_moe.py --base /tmp/q35/model-a --moe /tmp/q35/out-moe
+python -m pytest tests/test_moe_qwen3_5.py -q
+```
+
+See [`docs/qwen3_5_moe.md`](docs/qwen3_5_moe.md) for the full explanation.
 
 ## Notes
 
