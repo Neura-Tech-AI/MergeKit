@@ -1,0 +1,219 @@
+# Copyright (C) 2026 Arcee AI
+# SPDX-License-Identifier: LGPL-3.0-only
+
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+
+import yaml
+from pydantic import BaseModel, model_validator
+from typing_extensions import Literal, TypeAlias
+
+from mergekit.common import ModelReference
+from mergekit.tokenizer.config import TokenizerConfig
+
+ScalarParameter: TypeAlias = Union[bool, int, float, str]
+ScalarOrGradient: TypeAlias = Union[ScalarParameter, List[ScalarParameter]]
+
+
+class ConditionalParameter(BaseModel):
+    value: ScalarOrGradient
+    filter: Optional[str] = None
+
+
+ParameterSetting: TypeAlias = Union[
+    ConditionalParameter, List[ConditionalParameter], ScalarOrGradient
+]
+
+
+def evaluate_setting(
+    tensor_name: str,
+    setting: ParameterSetting,
+    t: float = 0,
+    *,
+    validate: Callable[[Any], Any],
+) -> Any:
+    """Resolve filters and gradients using the parameter's validated scalar types.
+
+    Numeric endpoints interpolate; booleans and strings select discrete values.
+    In particular, YAML scientific-notation strings become numeric endpoints for
+    numeric parameters, but remain discrete labels for string parameters.
+    """
+    if isinstance(setting, ConditionalParameter):
+        setting = [setting]
+    if isinstance(setting, (float, int, bool, str)):
+        return validate(setting)
+    elif isinstance(setting, list):
+        if not setting:
+            return None
+        if all(isinstance(e, (float, int, bool, str)) for e in setting):
+            values = [validate(e) for e in setting]
+            if not all(
+                isinstance(e, (int, float)) and not isinstance(e, bool) for e in values
+            ):
+                return values[int(t * (len(values) - 1))]
+            scaled = t * (len(setting) - 1)
+            i0 = int(scaled)
+            i1 = min(len(setting) - 1, i0 + 1)
+            frac = scaled - i0
+
+            result = (1 - frac) * values[i0] + frac * values[i1]
+            return validate(result)
+        else:
+            for cond in setting:
+                if (
+                    (cond.filter is None)
+                    or (cond.filter == "*")
+                    or (tensor_name and cond.filter in tensor_name)
+                ):
+                    res = evaluate_setting(
+                        tensor_name, cond.value, t, validate=validate
+                    )
+                    return res
+    else:
+        raise RuntimeError(f"Unexpected setting value: {setting}")
+    return None
+
+
+class InputSliceDefinition(BaseModel):
+    model: ModelReference
+    layer_range: Tuple[int, int]
+    parameters: Optional[Dict[str, ParameterSetting]] = None
+
+
+class InputModelDefinition(BaseModel):
+    model: ModelReference
+    parameters: Optional[Dict[str, ParameterSetting]] = None
+
+
+class OutputSliceDefinition(BaseModel):
+    sources: List[InputSliceDefinition]
+    base_model: Optional[ModelReference] = None
+    residual_weight: Optional[float] = None
+    parameters: Optional[Dict[str, ParameterSetting]] = None
+
+
+class OutputModuleDefinition(BaseModel):
+    slices: Optional[List[OutputSliceDefinition]] = None
+    models: Optional[List[InputModelDefinition]] = None
+    parameters: Optional[Dict[str, ParameterSetting]] = None
+
+    @model_validator(mode="after")
+    def validate_inputs(self):
+        if ((not self.slices) and (not self.models)) or (self.slices and self.models):
+            raise RuntimeError("Must specify either output slices or models to merge")
+        return self
+
+
+class MergeConfiguration(BaseModel):
+    modules: Optional[Dict[str, OutputModuleDefinition]] = None
+    slices: Optional[List[OutputSliceDefinition]] = None
+    models: Optional[List[InputModelDefinition]] = None
+
+    merge_method: str
+    base_model: Optional[ModelReference] = None
+    dtype: Optional[str] = None
+    tokenizer_source: Union[Literal["union"], Literal["base"], ModelReference, None] = (
+        None
+    )
+    tokenizer: Optional[TokenizerConfig] = None
+    chat_template: Optional[str] = None
+    out_dtype: Optional[str] = None
+    parameters: Optional[Dict[str, ParameterSetting]] = None
+
+    def referenced_models(self) -> List[ModelReference]:
+        models = set()
+        if self.base_model:
+            models.add(self.base_model)
+        if self.models:
+            for model_in in self.models:
+                models.add(model_in.model)
+        if self.slices:
+            for s in self.slices:
+                for src in s.sources:
+                    models.add(src.model)
+        if self.modules:
+            for m in self.modules.values():
+                if m.models:
+                    for model_in in m.models:
+                        models.add(model_in.model)
+                if m.slices:
+                    for s in m.slices:
+                        for src in s.sources:
+                            models.add(src.model)
+        return list(models)
+
+    @model_validator(mode="after")
+    def validate_inputs(self):
+        set_ct = 0
+        if self.modules:
+            set_ct += 1
+        if self.slices:
+            set_ct += 1
+        if self.models:
+            set_ct += 1
+
+        if set_ct != 1:
+            raise RuntimeError(
+                "Exactly one of 'models', 'slices', or 'modules' must be present"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def validate_tokenizer(self):
+        if self.tokenizer_source and self.tokenizer:
+            raise RuntimeError("Cannot specify both tokenizer_source and tokenizer")
+        return self
+
+    def to_yaml(self) -> str:
+        return yaml.dump(
+            self.model_dump(exclude_defaults=True, mode="json"),
+            Dumper=ConfigYamlDumper,
+        ).rstrip()
+
+
+class ConfigReader(BaseModel):
+    config: MergeConfiguration
+    t: float
+    slice_out: Optional[OutputSliceDefinition] = None
+    module: Optional[OutputModuleDefinition] = None
+
+    @property
+    def base_model(self) -> Optional[ModelReference]:
+        if self.slice_out and self.slice_out.base_model:
+            res = self.slice_out.base_model
+        else:
+            res = self.config.base_model
+
+        return res
+
+    def for_out_slice(self, slice: OutputSliceDefinition) -> "ConfigReader":
+        return self.model_copy(update={"slice_out": slice})
+
+    def with_t(self, t: float) -> "ConfigReader":
+        return self.model_copy(update={"t": t})
+
+    def parameter_sources(
+        self, model: Optional[ModelReference] = None
+    ) -> Iterable[Optional[Dict[str, ParameterSetting]]]:
+        """Yield settings from highest to lowest precedence, without resolving them."""
+        if self.slice_out:
+            if model is not None:
+                for source in self.slice_out.sources:
+                    if source.model == model:
+                        yield source.parameters
+            yield self.slice_out.parameters
+        if self.module:
+            yield self.module.parameters
+        yield self.config.parameters
+
+
+class ConfigYamlDumper(yaml.Dumper):
+    """Custom YAML dumper to format lists of numbers in flow style."""
+
+    def represent_list(self, data: Iterable[Any]) -> yaml.SequenceNode:
+        flow_style = all(isinstance(e, (int, float)) for e in data)
+        return self.represent_sequence(
+            "tag:yaml.org,2002:seq", data, flow_style=flow_style
+        )
+
+
+ConfigYamlDumper.add_representer(list, ConfigYamlDumper.represent_list)

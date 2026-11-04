@@ -1,0 +1,304 @@
+# Copyright (C) 2026 Arcee AI
+# SPDX-License-Identifier: LGPL-3.0-only
+
+import logging
+import re
+from collections import defaultdict
+from functools import lru_cache
+from typing import List, Optional, Tuple
+
+import torch
+from transformers.initialization import no_init_weights
+
+from mergekit.architecture.base import (
+    ModelArchitecture,
+    ModuleDefinition,
+    WeightInfo,
+)
+from mergekit.architecture.conversion import can_convert_checkpoint_keys
+from mergekit.architecture.json_definitions import (
+    JsonLayerTemplates,
+    JsonModuleArchDef,
+    JsonModuleArchitecture,
+)
+from mergekit.common import ModelReference, get_auto_cls
+from mergekit.options import MergeOptions
+
+try:
+    from transformers.modeling_utils import _get_tied_weight_keys
+except ImportError:
+    _get_tied_weight_keys = None
+
+RE_LAYER_INDEX = re.compile(r"\.(\d+)\.")
+
+LOG = logging.getLogger(__name__)
+
+
+def infer_vocabulary_axes(model: torch.nn.Module) -> dict[str, int]:
+    """Find token-indexed parameters, including aliases of tied weights/biases.
+
+    Only the declared input/output embeddings define vocabulary semantics.
+    Other Embedding modules (positions, token types, vision, etc.) do not.
+    """
+    axes_by_parameter = {}
+    for module in (model.get_input_embeddings(), model.get_output_embeddings()):
+        if module is None:
+            continue
+        weight = getattr(module, "weight", None)
+        if weight is not None:
+            axes_by_parameter[id(weight)] = 0
+        bias = getattr(module, "bias", None)
+        if bias is not None:
+            axes_by_parameter[id(bias)] = 0
+    return {
+        name: axes_by_parameter[id(parameter)]
+        for name, parameter in model.named_parameters(remove_duplicate=False)
+        if id(parameter) in axes_by_parameter
+    }
+
+
+def get_model_tensor_names(model: ModelReference, options: MergeOptions) -> List[str]:
+    loader = model.lazy_loader(
+        cache_dir=options.transformers_cache, lazy_unpickle=options.lazy_unpickle
+    )
+    return list(loader.index.tensor_paths.keys())
+
+
+def get_transformers_info(model: ModelReference, options: MergeOptions) -> tuple:
+    try:
+        cfg = model.config(
+            trust_remote_code=options.trust_remote_code,
+        )
+        auto_cls = get_auto_cls(cfg.architectures[0])
+    except Exception as e:
+        LOG.warning(
+            f"Unable to load config for {model.model} - tied/ignored weights will not be detected",
+            exc_info=e,
+        )
+        return None, None, None, None
+    model_obj = None
+    try:
+        with torch.device("meta"), no_init_weights():
+            model_obj = auto_cls.from_config(
+                cfg,
+                trust_remote_code=options.trust_remote_code,
+            )
+    except Exception as e:
+        LOG.warning(
+            f"Unable to instantiate model {model.model} with transformers config",
+            exc_info=e,
+        )
+    if model_obj is None:
+        try:
+            with torch.device("meta"):
+                model_obj = auto_cls.from_pretrained(
+                    model.model.path,
+                    revision=model.model.revision,
+                    trust_remote_code=options.trust_remote_code,
+                    device_map="meta",
+                )
+        except Exception as e:
+            LOG.warning(
+                f"Unable to load model {model.model} with transformers - tied/ignored weights will not be detected",
+                exc_info=e,
+            )
+            return None, None, None, None
+
+    # no_init_weights also suppresses Transformers' weight tying. Restore it so
+    # vocabulary inference can identify aliases by parameter identity.
+    model_obj.tie_weights()
+
+    ignore_on_save = getattr(model_obj, "_keys_to_ignore_on_save", None)
+    if _get_tied_weight_keys is None:
+        LOG.warning(
+            "Unable to get tied weights - incompatible transformers version",
+        )
+        tied_keys = None
+    else:
+        tied_keys = _get_tied_weight_keys(model_obj)
+    if ignore_on_save is not None:
+        ignore_on_save = set(ignore_on_save)
+
+    vocabulary_axes = infer_vocabulary_axes(model_obj)
+    tensor_names = list(model_obj.state_dict().keys())
+    return ignore_on_save, tied_keys, vocabulary_axes, tensor_names
+
+
+def _target_present_in_all_models(
+    target_name: str,
+    model_tensor_names: dict[ModelReference, set[str]],
+    model_types: dict[ModelReference, str],
+    use_transformers_layout: bool,
+) -> bool:
+    if use_transformers_layout:
+        return all(
+            can_convert_checkpoint_keys(
+                model_types.get(model),
+                model_tensor_names[model],
+                target_name,
+            )
+            for model in model_tensor_names
+        )
+    return all(target_name in names for names in model_tensor_names.values())
+
+
+def _template_present_in_all_models(
+    full_name_template: str,
+    num_layers: Optional[int],
+    model_tensor_names: dict[ModelReference, set[str]],
+    model_types: dict[ModelReference, str],
+    use_transformers_layout: bool,
+) -> bool:
+    if "${layer_index}" not in full_name_template:
+        return _target_present_in_all_models(
+            full_name_template,
+            model_tensor_names,
+            model_types,
+            use_transformers_layout,
+        )
+    if num_layers is None:
+        return _target_present_in_all_models(
+            full_name_template.replace("${layer_index}", "0"),
+            model_tensor_names,
+            model_types,
+            use_transformers_layout,
+        )
+    return all(
+        _target_present_in_all_models(
+            full_name_template.replace("${layer_index}", str(layer_idx)),
+            model_tensor_names,
+            model_types,
+            use_transformers_layout,
+        )
+        for layer_idx in range(num_layers)
+    )
+
+
+@lru_cache(maxsize=128)
+def infer_architecture_info(
+    models: Tuple[ModelReference, ...],
+    base_model: Optional[ModelReference],
+    options: MergeOptions,
+) -> ModelArchitecture:
+    model_tensor_names = {
+        model: set(get_model_tensor_names(model, options))
+        for model in (set(models).union({base_model} if base_model else {}))
+    }
+    models = list(models)
+    if base_model is None:
+        base_model = models.pop(0)
+    raw_tensor_names = set().union(*model_tensor_names.values())
+    ignore_on_save, tied_keys, vocabulary_axes, transformer_tensor_names = (
+        get_transformers_info(base_model, options)
+    )
+    if transformer_tensor_names:
+        all_tensor_names = set(transformer_tensor_names)
+        model_types = {
+            model: model.config(trust_remote_code=options.trust_remote_code).model_type
+            for model in model_tensor_names
+        }
+    else:
+        all_tensor_names = raw_tensor_names
+        model_types = {}
+
+    module_prefixes = set()
+    module_layer_counts = defaultdict(int)
+    module_templates = defaultdict(set)
+    module_loose_weights = defaultdict(set)
+
+    # capture prefixes and layer weight templates
+    for tensor_name in all_tensor_names:
+        if ignore_on_save and tensor_name in ignore_on_save:
+            continue
+        if match := RE_LAYER_INDEX.search(tensor_name):
+            prefix = tensor_name[: match.start()]
+            module_prefixes.add(prefix)
+            layer_idx = int(match.group(1))
+            module_layer_counts[prefix] = max(
+                module_layer_counts[prefix], layer_idx + 1
+            )
+            module_templates[prefix] = module_templates[prefix].union(
+                set([RE_LAYER_INDEX.sub(".${layer_index}.", tensor_name, count=1)])
+            )
+
+    if len(module_prefixes) == 1:
+        # if there's only one prefix, put everything in the default module
+        prefix = module_prefixes.pop()
+        module_templates = {"": module_templates[prefix]}
+        module_layer_counts = {"": module_layer_counts[prefix]}
+        module_loose_weights = {"": module_loose_weights[prefix]}
+        module_prefixes = {""}
+    else:
+        module_prefixes.add("")
+
+    for tensor_name in all_tensor_names:
+        if RE_LAYER_INDEX.search(tensor_name):
+            continue
+        for prefix in module_prefixes:
+            if tensor_name.startswith(prefix):
+                module_loose_weights[prefix].add(tensor_name[len(prefix) :])
+                break
+
+    if "" in module_prefixes and not (module_loose_weights[""] or module_templates[""]):
+        module_prefixes.remove("")
+    if not module_prefixes:
+        raise ValueError("No modules found in models")
+
+    logging.warning(f"Inferred {len(module_prefixes)} modules:")
+    for prefix in module_prefixes:
+        logging.warning(
+            f"  {repr(prefix or 'default')} with {module_layer_counts[prefix]} layers, {len(module_templates[prefix])} templates, and {len(module_loose_weights[prefix])} loose weights"
+        )
+
+    def _wi(
+        template: str,
+        prefix: str,
+        num_layers: Optional[int] = None,
+    ) -> WeightInfo:
+        full_name = prefix + template
+        present_in_all = _template_present_in_all_models(
+            full_name,
+            num_layers,
+            model_tensor_names,
+            model_types,
+            use_transformers_layout=bool(transformer_tensor_names),
+        )
+        optional = (not present_in_all) or (
+            tied_keys is not None
+            and any(re.search(pat, full_name) for pat in tied_keys)
+        )
+        return WeightInfo(
+            name=template,
+            optional=optional,
+            vocabulary_axis=(vocabulary_axes or {}).get(full_name),
+        )
+
+    module_archs = {}
+    for prefix in module_prefixes:
+        num_layers = module_layer_counts[prefix]
+        module_archs[prefix or "default"] = JsonModuleArchitecture(
+            definition=JsonModuleArchDef(
+                model_type="",
+                architectures=[],
+                pre_weights=[_wi(t, "") for t in module_loose_weights[prefix]],
+                layer_templates=JsonLayerTemplates(
+                    weights=[
+                        _wi(t, "", num_layers=num_layers)
+                        for t in module_templates[prefix]
+                    ]
+                ),
+                post_weights=[],
+                num_layers_config_key=None,
+                override_num_layers=num_layers,
+            ),
+        )
+
+    res = ModelArchitecture(
+        modules={
+            key: ModuleDefinition(architecture=value)
+            for key, value in module_archs.items()
+        },
+        architectures=[],
+        model_type="",
+    )
+    return res
