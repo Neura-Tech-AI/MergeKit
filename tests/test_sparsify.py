@@ -1,0 +1,170 @@
+import pytest
+import torch
+
+from mixtureforge.sparsify import SparsificationMethod, sparsify
+
+
+@pytest.fixture
+def sample_tensor():
+    res = torch.randn(128, 64)
+    res[res == 0] = 7  # very low chance, but hey!
+    return res
+
+
+class TestMagnitude:
+    @pytest.mark.parametrize("gamma", [0.0, 0.01, 0.25])
+    def test_strided_outlier_selection(self, gamma):
+        tensor = torch.arange(1, 13, dtype=torch.float32).reshape(3, 4).T
+        result = sparsify(
+            tensor,
+            density=0.5,
+            method=SparsificationMethod.magnitude_outliers,
+            gamma=gamma,
+        )
+        largest_kept = 12 - int(gamma * 12)
+        expected = tensor * ((tensor > largest_kept - 6) & (tensor <= largest_kept))
+        torch.testing.assert_close(result, expected)
+
+    def test_full_density(self, sample_tensor):
+        assert torch.equal(
+            sparsify(sample_tensor, density=1, method=SparsificationMethod.magnitude),
+            sample_tensor,
+        )
+
+    @pytest.mark.parametrize("rescale_norm", [None, "l1", "l2", "linf"])
+    def test_zero_density(self, sample_tensor, rescale_norm):
+        result = sparsify(
+            sample_tensor,
+            density=0,
+            method=SparsificationMethod.magnitude,
+            rescale_norm=rescale_norm,
+        )
+        torch.testing.assert_close(result, torch.zeros_like(sample_tensor))
+
+    @pytest.mark.parametrize("density", [0.01, 0.5])
+    @pytest.mark.parametrize(
+        "dtype", [torch.float16, torch.bfloat16, torch.float32, torch.float64]
+    )
+    @pytest.mark.parametrize(
+        "values,expected",
+        [
+            (3.0, 3.0),
+            ([-3.0], [-3.0]),
+            ([1.0, -4.0, 2.0], [0.0, -4.0, 0.0]),
+            ([[1.0, -4.0, 2.0]], [[0.0, -4.0, 0.0]]),
+        ],
+    )
+    def test_small_tensor_retains_largest_value(self, density, dtype, values, expected):
+        tensor = torch.tensor(values, dtype=dtype)
+        result = sparsify(tensor, density, SparsificationMethod.magnitude)
+        torch.testing.assert_close(result, torch.tensor(expected, dtype=dtype))
+        torch.testing.assert_close(tensor, torch.tensor(values, dtype=dtype))
+
+    @pytest.mark.parametrize("shape", [(0,), (2, 0)])
+    @pytest.mark.parametrize("rescale_norm", [None, "l1", "l2", "linf"])
+    def test_empty_tensor(self, shape, rescale_norm):
+        tensor = torch.empty(shape)
+        result = sparsify(
+            tensor,
+            density=0.5,
+            method=SparsificationMethod.magnitude,
+            rescale_norm=rescale_norm,
+        )
+        torch.testing.assert_close(result, tensor)
+
+    def test_partial_density(self, sample_tensor):
+        result = sparsify(
+            sample_tensor, density=0.5, method=SparsificationMethod.magnitude
+        )
+        assert torch.count_nonzero(result) == sample_tensor.view(-1).shape[0] // 2
+
+    def test_outliers(self, sample_tensor):
+        for gamma_0 in [0.1, 0.2, 0.5, 1.0]:
+            for density in [0.1, 0.3, 0.5, 0.6, 0.9, 1.0]:
+                sparsity = 1 - density
+                gamma = gamma_0 * sparsity
+                result = sparsify(
+                    sample_tensor,
+                    density=density,
+                    method=SparsificationMethod.magnitude_outliers,
+                    gamma=gamma,
+                )
+                assert torch.count_nonzero(result) == int(
+                    sample_tensor.view(-1).shape[0] * density
+                )
+
+    def test_norm_rescale(self, sample_tensor):
+        l1_norm = sample_tensor.abs().sum()
+        l2_norm = sample_tensor.norm()
+        linf_norm = sample_tensor.abs().max()
+
+        normed_l1 = sparsify(
+            sample_tensor,
+            density=0.5,
+            method=SparsificationMethod.magnitude,
+            rescale_norm="l1",
+        )
+        normed_l2 = sparsify(
+            sample_tensor,
+            density=0.5,
+            method=SparsificationMethod.magnitude,
+            rescale_norm="l2",
+        )
+        normed_linf = sparsify(
+            sample_tensor,
+            density=0.5,
+            method=SparsificationMethod.magnitude,
+            rescale_norm="linf",
+        )
+
+        assert torch.isclose(normed_l1.abs().sum(), l1_norm, rtol=0.01)
+        assert torch.isclose(normed_l2.norm(), l2_norm, rtol=0.01)
+        assert torch.isclose(normed_linf.abs().max(), linf_norm, rtol=0.01)
+
+    def test_della_magprune(self, sample_tensor):
+        res = sparsify(
+            sample_tensor,
+            density=0.5,
+            method=SparsificationMethod.della_magprune,
+            epsilon=0.05,
+            rescale_norm="l1",
+        )
+        assert not res.isnan().any(), "NaNs in result tensor"
+        assert not res.isinf().any(), "Infs in result tensor"
+
+
+class TestBernoulli:
+    NUM_ITERATIONS = 1000
+
+    def test_bernoulli_with_rescale(self, sample_tensor):
+        ref_abs_sum = sample_tensor.abs().sum()
+        avg_abs_sum = torch.zeros_like(ref_abs_sum)
+        for _ in range(TestBernoulli.NUM_ITERATIONS):
+            rescaled = sparsify(
+                sample_tensor,
+                density=0.5,
+                method=SparsificationMethod.random,
+                rescale_norm="l1",
+            )
+            avg_abs_sum += rescaled.abs().sum()
+        avg_abs_sum /= TestBernoulli.NUM_ITERATIONS
+
+        assert torch.isclose(avg_abs_sum, ref_abs_sum, rtol=0.01)
+
+    def test_bernoulli_without_rescale(self, sample_tensor):
+        result = sparsify(
+            sample_tensor,
+            density=0.5,
+            method=SparsificationMethod.random,
+            rescale_norm=None,
+        )
+        assert 0 < torch.count_nonzero(result) <= sample_tensor.view(-1).shape[0]
+
+    def test_cpu_dtypes(self, sample_tensor):
+        for dt in (torch.float16, torch.bfloat16, torch.float32):
+            sparsify(
+                tensor=sample_tensor.to(dtype=dt).cpu(),
+                density=0.5,
+                method=SparsificationMethod.random,
+                rescale_norm="l1",
+            )

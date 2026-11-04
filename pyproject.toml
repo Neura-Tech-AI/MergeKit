@@ -1,0 +1,103 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mixtureforge"
+description = "Tools for merging pre-trained large language models"
+readme = "README.md"
+license = { text = "LGPL-3.0-only" }
+version = "0.1.5"
+# mixtureforge is a fork of mergekit. The LGPL requires the original
+# attribution to stay, so it comes first and Neura-Tech-AI is added after it.
+authors = [
+    { name = "Charles Goddard", email = "chargoddard@gmail.com" },
+    { name = "Neura-Tech-AI" },
+]
+maintainers = [{ name = "Neura-Tech-AI" }]
+keywords = ["mergekit", "mixture-of-experts", "moe", "model merging", "llm"]
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.0.0",
+    "tqdm>=4.67.1,<5",
+    "click>=8.2.1,<9",
+    "safetensors>=0.5.2,<1",
+    "accelerate>=1.6.0,<2",
+    "pydantic>=2.10.6,<3",
+    "immutables>=0.21,<1",
+    "transformers>=5.0,<6.0",
+    "tokenizers>=0.20.1",
+    "huggingface_hub",
+    "peft>=0.18.0",
+    "typing-extensions",
+    "sentencepiece",
+    "protobuf",
+    "scipy",
+    "datasets",
+]
+
+[project.optional-dependencies]
+dev = ["ruff==0.14.2", "pre-commit>=4.2.0,<5"]
+test = ["pytest>=8.4.0,<9"]
+evolve = ["ray", "cma", "lm_eval", "wandb"]
+
+[project.urls]
+repository = "https://github.com/Neura-Tech-AI/MergeKit"
+upstream = "https://github.com/arcee-ai/mergekit"
+
+
+[project.scripts]
+mixtureforge-yaml = "mixtureforge.scripts.run_yaml:main"
+mixtureforge-legacy = "mixtureforge.scripts.legacy:main"
+mixtureforge-layershuffle = "mixtureforge.scripts.layershuffle:main"
+bakllama = "mixtureforge.scripts.bakllama:main"
+mixtureforge-moe = "mixtureforge.scripts.moe:main"
+mixtureforge-tokensurgeon = "mixtureforge.scripts.tokensurgeon:main"
+mixtureforge-extract-lora = "mixtureforge.scripts.extract_lora:main"
+mixtureforge-evolve = "mixtureforge.scripts.evolve:main"
+mixtureforge-pytorch = "mixtureforge.scripts.merge_raw_pytorch:main"
+mixtureforge-multi = "mixtureforge.scripts.multimerge:main"
+
+[tool.setuptools]
+packages = [
+    "mixtureforge",
+    "mixtureforge.io",
+    "mixtureforge.merge_methods",
+    "mixtureforge.moe",
+    "mixtureforge.scripts",
+    "mixtureforge.evo",
+    "mixtureforge.tokenizer",
+    "mixtureforge.tokensurgeon",
+    "mixtureforge.architecture",
+    "mixtureforge._data",
+    "mixtureforge._data.architectures",
+    "mixtureforge._data.chat_templates",
+]
+include-package-data = true
+package-data = { "mixtureforge._data.architectures" = [
+    "*.json",
+], "mixtureforge._data.chat_templates" = [
+    "*.jinja",
+] }
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+include = ["*.py", "*.pyi"]
+
+[tool.ruff.lint]
+select = ["I"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+filterwarnings = [
+    "ignore::pydantic.PydanticDeprecatedSince20:huggingface_hub.*:",
+    "ignore::FutureWarning:huggingface_hub.*:",
+    "ignore:Attempting Automatic Merge:UserWarning",
+    "ignore:No architecture config available:UserWarning",
+]
+testpaths = ["tests"]
+
+[dependency-groups]
+test = ["pytest>=8.4.0,<9"]
+dev = ["ruff==0.14.2", "pre-commit>=4.2.0,<5"]
