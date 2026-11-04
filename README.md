@@ -59,6 +59,10 @@ Key features of `mergekit` include:
 
 ## Installation
 
+> **Working in this repository's sandbox?** See [`LOCAL_SETUP.md`](LOCAL_SETUP.md) for the
+> already-provisioned `.venv`, the exact test command, and the offline merge workflow
+> (Hugging Face is unreachable here, so use `tools/demo/make_tiny_models.py` instead).
+
 ```sh
 git clone https://github.com/arcee-ai/mergekit.git
 cd mergekit
