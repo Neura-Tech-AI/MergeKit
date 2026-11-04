@@ -118,6 +118,69 @@ gv = get_gate_params(ref, tokenizer, experts, mode="hidden", device="cpu")
 # gv: (layers, experts, hidden) -> cosine between experts per layer
 ```
 
+## Tokenizer and config: what the output actually contains
+
+Two questions come up every time: *does the tokenizer come from the base model
+or is a new one built?* and *what happens to `config.json`?*
+
+### Tokenizer — the base model's, rewritten
+
+`mergekit-moe` loads `AutoTokenizer` **from the base model only** and calls
+`save_pretrained` on it. Experts never contribute tokenizer files, so with three
+experts you still get exactly one tokenizer and it is the base model's.
+
+Because `save_pretrained` reserialises rather than copies, `tokenizer.json` is
+byte-different from the source even though it means the same thing. Measured on
+a BPE tokenizer: `model.type`, every token string and every token id are
+identical, and encoding round-trips exactly (`'write python code'` ->
+`[23, 18, 9, 20, 5, 109, 96]` on both sides). The only structural difference is
+that the merged one gains a `padding` block, because the router sets
+`padding_side = "left"` and a pad token before saving.
+
+The raw files that `save_pretrained` does **not** emit are copied verbatim from
+the base model afterwards (`vocab.json`, `merges.txt`,
+`special_tokens_map.json`, `added_tokens.json`, `generation_config.json`,
+`chat_template.jinja`, `chat_template.json`). Those are byte-identical.
+
+For `sartajbhuvaji/unfuse-Qwen3.8-27B-text` the result is:
+
+| source file | in the output |
+|---|---|
+| `tokenizer.json` (13 MB) | rewritten, same ids |
+| `tokenizer_config.json` | rewritten |
+| `vocab.json`, `merges.txt` | copied byte-identical |
+| `generation_config.json` | copied byte-identical |
+| `chat_template.jinja` | copied byte-identical |
+| `.gitattributes`, `architecture.svg` | copied byte-identical |
+| `config.json` | **replaced** by the MoE config |
+| `README.md` | **replaced** by the generated card |
+| `model-*.safetensors` + index | replaced by the merged weights |
+
+### Config — every base key kept, MoE keys added
+
+`_generate_config` starts from `base_config.to_dict()`, drops only VLM keys
+(`vision_config`, `image_token_id`, ...), and then sets the MoE fields. Compared
+against the real 27B config:
+
+**added** (7): `num_experts`, `num_experts_per_tok`, `moe_intermediate_size`,
+`shared_expert_intermediate_size`, `norm_topk_prob`, `router_aux_loss_coef`,
+`output_router_logits`
+
+**changed** (2): `architectures` (`Qwen3_5ForCausalLM` ->
+`Qwen3_5MoeForCausalLM`) and `model_type` (`qwen3_5_text` ->
+`qwen3_5_moe_text`)
+
+**unchanged** (the ones that decide the architecture): `layer_types`,
+`full_attention_interval`, `rope_parameters`, `attn_output_gate`,
+`output_gate_type`, `linear_conv_kernel_dim`, `linear_num_*_heads`,
+`linear_*_head_dim`, `mamba_ssm_dtype`, `tie_word_embeddings`, `rms_norm_eps`,
+`hidden_act`, `attention_bias`, `mtp_num_hidden_layers`,
+`mtp_use_dedicated_embeddings`
+
+One key disappears: the top-level `partial_rotary_factor`. That is safe — the
+Qwen3.5 modeling code reads it from `config.rope_parameters["partial_rotary_factor"]`,
+which is carried over intact and keeps the value `0.25`.
+
 ## Which files does the output contain?
 
 `mergekit-moe` writes `config.json`, the weights and the merged config, then —
