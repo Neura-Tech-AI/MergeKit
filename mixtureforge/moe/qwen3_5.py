@@ -519,3 +519,6 @@ class Qwen3_5MoE(MoEOutputArchitecture):
             os.path.join(out_path, "mixtureforge_moe.json"), "w", encoding="utf-8"
         ) as fp:
             json.dump(manifest, fp, indent=2)
+            # a trailing newline keeps the file POSIX-clean, so a repo using
+            # pre-commit's end-of-file-fixer does not flag every merge output
+            fp.write("\n")

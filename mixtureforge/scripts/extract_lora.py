@@ -181,6 +181,7 @@ def main(
     )
     with open(os.path.join(out_path, "adapter_config.json"), "w") as f:
         json.dump(config_dict, f, indent=4)
+        f.write("\n")
 
     invocation = " ".join(sys.argv)
     with open(os.path.join(out_path, "README.md"), "w", encoding="utf-8") as f:

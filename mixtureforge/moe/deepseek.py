@@ -121,6 +121,7 @@ class DeepseekMoE(MoEOutputArchitecture):
         os.makedirs(out_path, exist_ok=True)
         with open(os.path.join(out_path, "config.json"), "w", encoding="utf-8") as f:
             json.dump(out_cfg, f, indent=4)
+            f.write("\n")
 
         shared_def = config.shared_experts[0] if config.shared_experts else None
 

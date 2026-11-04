@@ -185,6 +185,7 @@ class TensorWriter:
                         "weight_map": self.weight_map,
                     }
                     json.dump(content, f, indent=2)
+                    f.write("\n")
 
     def _get_name_components(self):
         if self.override_basename:

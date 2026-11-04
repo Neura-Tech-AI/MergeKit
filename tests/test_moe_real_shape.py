@@ -171,3 +171,52 @@ def test_merge_writes_card_and_aux_files(merged):
     card = pathlib.Path(merged, "README.md").read_text()
     assert "mixture-of-experts" in card
     assert "Qwen3.5 MoE" in card
+
+
+def test_output_files_are_posix_clean(merged):
+    """Every JSON a merge writes must end with a newline.
+
+    `mixtureforge_moe.json` used to be written without one, so any repo that
+    merges a model and then runs pre-commit's `end-of-file-fixer` had every
+    output flagged as dirty. The files a merge produces should be clean by
+    construction.
+    """
+    # Files written by transformers' save_pretrained (tokenizer.json) and files
+    # copied verbatim from the donor checkpoint (generation_config.json) keep
+    # whatever the source had. The ones mixtureforge itself serialises must be
+    # clean.
+    ours = {"config.json", "mixtureforge_moe.json", "tokenizer_config.json"}
+    no_newline = []
+    for name in ours:
+        path = pathlib.Path(merged, name)
+        if not path.is_file():
+            continue
+        data = path.read_bytes()
+        if data and not data.endswith(b"\n"):
+            no_newline.append(name)
+    assert not no_newline, f"these outputs do not end with a newline: {no_newline}"
+
+
+def test_manifest_has_trailing_newline(tmp_path):
+    """`mixtureforge_moe.json` specifically -- the file this bug came from."""
+    from mixtureforge.moe.qwen3_5 import Qwen3_5MoE
+
+    cfg = json.loads(
+        pathlib.Path("artifacts/qwen35_moe_demo/merged-moe/config.json").read_text()
+    )
+    kinds = [
+        "self_attn" if t.endswith("full_attention") else "linear_attn"
+        for t in cfg["layer_types"]
+    ]
+
+    class _Cfg:
+        model_type = cfg["model_type"]
+        num_hidden_layers = cfg["num_hidden_layers"]
+        num_experts = cfg["num_experts"]
+        num_experts_per_tok = cfg["num_experts_per_tok"]
+        moe_intermediate_size = cfg["moe_intermediate_size"]
+        shared_expert_intermediate_size = cfg["shared_expert_intermediate_size"]
+
+    Qwen3_5MoE._write_manifest(str(tmp_path), _Cfg(), ["mtp.fc.weight"], kinds)
+    data = (tmp_path / "mixtureforge_moe.json").read_bytes()
+    assert data.endswith(b"\n")
