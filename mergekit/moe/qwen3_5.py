@@ -185,6 +185,27 @@ class Qwen3_5MoE(MoEOutputArchitecture):
     def name(self) -> str:
         return "Qwen3.5 MoE"
 
+    def tagalong_files(self) -> List[str]:
+        """Qwen3.5 tokenizers keep modality markers even after vision removal.
+
+        The published text-only checkpoints still carry the Qwen2 tokenizer with
+        ``<|image_pad|>`` / ``<|video_pad|>`` / audio tokens, plus a chat template
+        that references them. Carrying the raw tokenizer files (rather than only
+        the reserialised object) keeps those markers byte-identical, and the
+        generation config keeps sampling defaults.
+        """
+        return [
+            "tokenizer_config.json",
+            "tokenizer.json",
+            "vocab.json",
+            "merges.txt",
+            "chat_template.jinja",
+            "chat_template.json",
+            "generation_config.json",
+            "special_tokens_map.json",
+            "added_tokens.json",
+        ]
+
     # ------------------------------------------------------------------ #
     # capability check
     # ------------------------------------------------------------------ #

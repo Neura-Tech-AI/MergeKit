@@ -130,9 +130,7 @@ def main() -> None:
 
     write_configs(out_dir)
     print("\nNow run:")
-    print(
-        f"  mergekit-yaml {out_dir}/linear.yml {out_dir}/out-linear --copy-tokenizer"
-    )
+    print(f"  mergekit-yaml {out_dir}/linear.yml {out_dir}/out-linear --copy-tokenizer")
 
 
 if __name__ == "__main__":

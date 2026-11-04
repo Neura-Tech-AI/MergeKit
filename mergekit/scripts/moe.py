@@ -3,8 +3,9 @@
 
 import logging
 import os
+import shutil
 import sys
-from typing import List
+from typing import List, Optional, Sequence
 
 import click
 import transformers
@@ -15,6 +16,77 @@ from mergekit.moe import ALL_OUTPUT_ARCHITECTURES, MoEOutputArchitecture
 from mergekit.moe.config import MoEMergeConfig, is_bad_config
 from mergekit.moe.router import get_gate_params, warn_degenerate_gates
 from mergekit.options import PrettyPrintHelp, add_merge_options
+
+# Files produced by the merge itself, or unsafe to carry over.
+MOE_SKIP_FILES = frozenset(
+    {
+        "config.json",
+        "readme.md",
+        "mergekit_config.yml",
+        "mergekit_moe_config.yml",
+        "mergekit_moe.json",
+        "model.safetensors.index.json",
+    }
+)
+MOE_SKIP_PREFIXES = ("model-", "model.safetensors", "pytorch_model")
+
+# Everything that makes a checkpoint usable but is NOT stored in config.json:
+# the packed tokenizer, special tokens, chat template, generation defaults,
+# sentencepiece files, preprocessors, and (for VLM-turned-text models) the
+# modality markers the tokenizer still references.
+MOE_TAGALONG_EXTS = (
+    ".jinja",
+    ".json",
+    ".model",
+    ".txt",
+    ".tiktoken",
+    ".py",
+    ".svg",
+    ".md",
+    ".gitattributes",
+)
+
+
+def _is_shard_or_weights(basename: str) -> bool:
+    return basename.startswith(MOE_SKIP_PREFIXES) or basename.endswith(".safetensors")
+
+
+def copy_tagalong_files(
+    donor_path: str,
+    out_path: str,
+    extra_files: Optional[Sequence[str]] = None,
+) -> List[str]:
+    """Copy the non-weight files that a checkpoint needs to be loadable.
+
+    `mergekit-moe` only writes config + weights and, optionally, a tokenizer
+    reserialised from `save_pretrained`. That drops `generation_config.json`,
+    `chat_template.jinja`, `vocab.json`, `merges.txt` and any architecture
+    specific extras declared through `tagalong_files` in the architecture JSON.
+    Dense merges already copy those; this brings MoE merges to parity.
+
+    Returns the list of copied file names.
+    """
+    if not donor_path or not os.path.isdir(donor_path):
+        return []
+
+    wanted = set(extra_files or []) | set(MOE_TAGALONG_EXTS)
+    copied: List[str] = []
+    for basename in sorted(os.listdir(donor_path)):
+        # case-insensitive: README.md on disk vs "readme.md" in the skip list
+        if basename.lower() in MOE_SKIP_FILES or _is_shard_or_weights(basename):
+            continue
+        if not any(basename.endswith(ext) for ext in wanted):
+            continue
+        source = os.path.join(donor_path, basename)
+        if not os.path.isfile(source):
+            continue
+        target = os.path.join(out_path, basename)
+        if os.path.exists(target):
+            # never clobber what the merge just wrote (e.g. tokenizer_config)
+            continue
+        shutil.copy(source, target)
+        copied.append(basename)
+    return copied
 
 
 def build(
@@ -80,6 +152,25 @@ def build(
     if merge_options.copy_tokenizer:
         logging.info("Saving tokenizer...")
         tokenizer.save_pretrained(out_path, safe_serialization=True)
+
+        # Carry over everything the tokenizer references but does not save
+        # itself: generation defaults, chat template, vocab/merges, modality
+        # markers, and any architecture-specific tagalong files.
+        donor_path = base_model.model.path
+        try:
+            donor_path = (
+                base_model.local_path(cache_dir=merge_options.transformers_cache)
+                or donor_path
+            )
+        except Exception:
+            pass
+        copied = copy_tagalong_files(
+            donor_path, out_path, extra_files=out_arch.tagalong_files()
+        )
+        if copied:
+            logging.info(f"Copied {len(copied)} auxiliary file(s): {copied}")
+        else:
+            logging.info("No auxiliary files found to copy.")
 
     logging.info("Done.")
 

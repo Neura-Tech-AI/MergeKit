@@ -29,12 +29,15 @@ class MoEMergeConfig(BaseModel):
 
     base_model: ModelReference
     experts: List[Expert]
-    gate_mode: str = (
-        "hidden"  # possible values: "hidden", "cheap_embed", "random", "uniform_random"
-    )
-    # "hidden" uses hidden state vectors for the given prompts for each layer
-    # "cheap_embed" uses the average of token embeddings for the prompts, same for each layer
-    # "random" is random
+    gate_mode: str = "hidden"
+    # "hidden"        (default) hidden states for the given prompts, per layer
+    # "hidden_avg"    average the hidden states over the prompt's tokens
+    # "hidden_last"   use only the last token's hidden state
+    # "router_input"  the exact tensor each MoE block receives (see router.py);
+    #                 unlike "hidden" this lives in the space the gate is scored
+    #                 against, so it tends to separate prompts better
+    # "cheap_embed"   average of token embeddings, same vector for every layer
+    # "random"        random router
     # "uniform_random" matches default initialization for torch.nn.Linear
     dtype: Optional[str] = None
     experts_per_token: int = 2

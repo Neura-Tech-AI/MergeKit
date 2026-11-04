@@ -28,6 +28,15 @@ class MoEOutputArchitecture(ABC):
         If `explain` is True, log an explanation of why the config is not supported."""
         pass
 
+    def tagalong_files(self) -> List[str]:
+        """Extra non-weight files this output architecture needs copied.
+
+        These complement the files mergekit copies by default (tokenizer,
+        special tokens, chat template, generation config). Architectures that
+        need preprocessors or other side files override this.
+        """
+        return []
+
     @abstractmethod
     def write_model(
         self,

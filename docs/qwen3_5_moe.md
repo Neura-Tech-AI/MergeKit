@@ -67,6 +67,81 @@ The `unfuse-*` checkpoint is already vision-removed and text-only, so it uses ba
 **regular dense merges** (`mergekit-yaml` with `linear`, `slerp`, `ties`, `dare_ties`,
 `model_stock`, `passthrough`, ...) also work on Qwen3.5 checkpoints.
 
+## Gate modes — which one to use
+
+`mergekit-moe` builds the router from your `positive_prompts`. The mode decides
+*where* the gate vectors come from. All modes were measured on the same trained
+specialists (`[math] -> expert0`, `[code] -> expert1`), reporting the cosine
+between the two experts' gate vectors — **lower is better**, because a gate has to
+tell them apart:
+
+| `gate_mode`    | per-layer | source of the gate vector | math↔code cosine |
+|----------------|-----------|---------------------------|------------------|
+| `hidden`       | yes       | `output_hidden_states[i]` (pre-norm residual stream) | `[0.04, -0.10, -0.15, -0.13]` |
+| `hidden_last`  | yes       | same, last token only | `[0.04, -0.10, -0.15, -0.13]` |
+| `hidden_avg`   | yes       | same, averaged over the prompt | `[0.33, 0.34, 0.35, 0.35]` |
+| `router_input` | yes       | the tensor each MoE block **actually receives** | `[0.57, 0.59, 0.48, 0.45]` |
+| `cheap_embed`  | no        | mean token embedding, one vector for all layers | — |
+| `random`       | —         | random (use for training afterwards) | — |
+
+`hidden` is the default and gives the sharpest separation of the prompt-driven
+modes, so it is the right choice for most merges.
+
+### The subtlety behind `router_input`
+
+`hidden` reads `output_hidden_states[i]`, the *pre-norm residual stream* entering
+decoder layer `i`. The router is not fed that: it gets
+`hidden + attn(post_attention_layernorm(hidden))`, i.e. the post-attention
+normalised state. On layer 0 the two spaces differ a lot (cosine between a
+gate vector and its query is `0.16` for `hidden` vs `0.68` for `router_input`).
+On deeper layers they converge, which is why `hidden` still works well in
+practice — but if routing looks unstable on a model with large per-layer drift,
+try `gate_mode: router_input`.
+
+### Practical prompt tips
+
+* **3–4 distinct prompts per expert**, in the phrasing you expect at inference.
+* Keep prompts semantically far apart — mergekit prints
+  `degenerate routing parameters` and `experts will be underutilized` when they
+  are not.
+* Check the separation yourself before a big run:
+
+```python
+from mergekit.moe.router import get_gate_params
+from mergekit.moe.config import Expert
+from mergekit.common import ModelReference
+
+ref = ModelReference.parse("./qwen38-text")
+experts = [Expert(source_model=ref, positive_prompts=["code", "debug"]),
+           Expert(source_model=ref, positive_prompts=["poem", "story"])]
+gv = get_gate_params(ref, tokenizer, experts, mode="hidden", device="cpu")
+# gv: (layers, experts, hidden) -> cosine between experts per layer
+```
+
+## Which files does the output contain?
+
+`mergekit-moe` writes `config.json`, the weights and the merged config, then —
+with `--copy-tokenizer` — the tokenizer **and every auxiliary file the checkpoint
+needs**. Dense merges already honoured `tagalong_files` from the architecture
+JSON; the MoE path now does the same. For a Qwen3.5 checkpoint the output keeps:
+
+| copied | why it matters |
+|---|---|
+| `tokenizer.json`, `tokenizer_config.json`, `special_tokens_map.json`, `added_tokens.json` | the Qwen2 tokenizer, byte-identical |
+| `vocab.json`, `merges.txt` | needed by the slow/tokenizers pair and by conversion tooling |
+| `chat_template.jinja` | the real chat template (reasoning/tool-call blocks) |
+| `generation_config.json` | sampling defaults — easily forgotten, changes output |
+| `.gitattributes`, `architecture.svg` | repo hygiene |
+| `mtp.*` tensors | inside `model.safetensors`, not a file |
+
+Deliberately **not** copied: `config.json` (rewritten as the MoE config),
+`README.md` (regenerated as the model card), `mergekit_moe.json` (generated),
+and any `*.safetensors` shard.
+
+The Qwen3.5 tokenizer keeps modality markers like `<|image_pad|>` even in the
+text-only checkpoint, which is why shipping the raw tokenizer files instead of
+only a reserialised object matters.
+
 ## Usage
 
 ```yaml
