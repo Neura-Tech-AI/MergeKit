@@ -15,13 +15,13 @@ from transformers import (
     LlavaForConditionalGeneration,
 )
 
-from mergekit.architecture import (
+from mixtureforge.architecture import (
     arch_info_for_config,
     get_architecture_info,
 )
-from mergekit.config import MergeConfiguration
-from mergekit.io.lazy_tensor_loader import LazyTensorLoader, ShardedTensorIndex
-from mergekit.merge import MergeOptions, run_merge
+from mixtureforge.config import MergeConfiguration
+from mixtureforge.io.lazy_tensor_loader import LazyTensorLoader, ShardedTensorIndex
+from mixtureforge.merge import MergeOptions, run_merge
 
 
 def run_and_check_merge(

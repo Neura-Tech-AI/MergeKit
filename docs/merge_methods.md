@@ -28,7 +28,7 @@
 
 ## Overview
 
-This guide provides detailed information about the various model merging algorithms available in `mergekit`. Each method has specific use cases, parameters, and applications for combining machine learning models.
+This guide provides detailed information about the various model merging algorithms available in `mixtureforge`. Each method has specific use cases, parameters, and applications for combining machine learning models.
 
 ## Basic Merging Methods
 
@@ -293,7 +293,7 @@ For inactive parameters, the base model value is preserved. Unique contributions
 **Variants:**
 
 - `ram`: The base RAM method without rescaling. Unique parameters are preserved as-is, shared parameters are averaged.
-- `ramplus_tl`: RAM+ extends RAM by applying an adaptive rescaling factor `λ` to unique contributions, compensating for signal dilution caused by averaging shared parameters. The rescaling formula is: `λ = 1 + r · clip(ρ, 0, α)`, where `ρ` is the ratio of shared to unique parameter counts for each model within each tensor. `mergekit` implements a tensor-local variant, in which the overlap-unique ratio `ρ` is computed per-tensor rather than globally.
+- `ramplus_tl`: RAM+ extends RAM by applying an adaptive rescaling factor `λ` to unique contributions, compensating for signal dilution caused by averaging shared parameters. The rescaling formula is: `λ = 1 + r · clip(ρ, 0, α)`, where `ρ` is the ratio of shared to unique parameter counts for each model within each tensor. `mixtureforge` implements a tensor-local variant, in which the overlap-unique ratio `ρ` is computed per-tensor rather than globally.
 
 **Use Cases:**
 

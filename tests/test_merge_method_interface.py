@@ -7,8 +7,8 @@ import pytest
 import torch
 from pydantic import Field, ValidationError
 
-from mergekit.config import MergeConfiguration
-from mergekit.merge_methods import (
+from mixtureforge.config import MergeConfiguration
+from mixtureforge.merge_methods import (
     BasePolicy,
     BatchParameter,
     InputContract,
@@ -21,11 +21,11 @@ from mergekit.merge_methods import (
     merge_state_dicts,
     merge_tensors,
 )
-from mergekit.merge_methods.easy_define import merge_method
-from mergekit.scripts.merge_raw_pytorch import (
+from mixtureforge.merge_methods.easy_define import merge_method
+from mixtureforge.scripts.merge_raw_pytorch import (
     InputModelDefinition as RawInputModelDefinition,
 )
-from mergekit.scripts.merge_raw_pytorch import (
+from mixtureforge.scripts.merge_raw_pytorch import (
     RawPyTorchMergeConfig,
     construct_param_dicts,
 )
@@ -233,7 +233,7 @@ def test_per_input_values_are_ordered_and_shape_checked(values_type):
 
 @pytest.mark.parametrize("sequence_type", [list, tuple])
 def test_registered_method_can_be_called_directly(sequence_type):
-    from mergekit import merge_methods
+    from mixtureforge import merge_methods
 
     batch = [
         TensorGroup.from_tensors(
@@ -247,7 +247,7 @@ def test_registered_method_can_be_called_directly(sequence_type):
 
 
 def test_group_factory_base_and_embedding_metadata():
-    from mergekit import merge_methods
+    from mixtureforge import merge_methods
 
     base = torch.ones(2, 3).T
     other = torch.full_like(base, 3)
@@ -335,7 +335,7 @@ def test_config_parameter_carrier_preserves_scalar_types():
 
 
 def test_raw_parameter_binding_preserves_zero_values():
-    from mergekit import merge_methods
+    from mixtureforge import merge_methods
 
     config = RawPyTorchMergeConfig(
         merge_method="linear",
@@ -403,8 +403,8 @@ def test_state_dict_merge_rejects_broadcastable_weights():
 )
 @pytest.mark.parametrize("shape", [(3, 2), (2, 3)])
 def test_methods_reject_mismatched_embedding_shapes(method_name, count, shape):
-    from mergekit import merge_methods
-    from mergekit.merge_methods import TensorMetadata
+    from mixtureforge import merge_methods
+    from mixtureforge.merge_methods import TensorMetadata
 
     entries = tuple(
         TensorEntry(i, torch.ones((2, 2) if i == 0 else shape), is_base=i == 0)
@@ -428,7 +428,7 @@ def test_group_kernel_must_preserve_weight_shape():
 
 @pytest.mark.parametrize("filter_wise", [False, True])
 def test_model_stock_singularity_retains_base_with_finite_gradients(filter_wise):
-    from mergekit import merge_methods
+    from mixtureforge import merge_methods
 
     base = torch.tensor([[2.0, 3.0]], dtype=torch.float64, requires_grad=True)
     a = torch.tensor([[3.0, 3.0]], dtype=torch.float64, requires_grad=True)
@@ -447,7 +447,7 @@ def test_model_stock_singularity_retains_base_with_finite_gradients(filter_wise)
 @pytest.mark.parametrize("shape", [(), (4,), (2, 3)])
 @pytest.mark.parametrize("density", [0.0, 0.5, 1.0])
 def test_sce_zero_variance_preserves_shape(shape, density):
-    from mergekit import merge_methods
+    from mixtureforge import merge_methods
 
     base = torch.ones(shape)
     other = torch.full(shape, 3.0)
@@ -478,9 +478,9 @@ def test_none_input_ids_are_rejected_at_every_entry_point():
 def test_passthrough_graph_does_not_visit_math_device(tmp_path, scale):
     from safetensors.torch import load_file, save_file
 
-    from mergekit.graph import Executor
-    from mergekit.options import MergeOptions
-    from mergekit.scripts.merge_raw_pytorch import plan_flat_merge
+    from mixtureforge.graph import Executor
+    from mixtureforge.options import MergeOptions
+    from mixtureforge.scripts.merge_raw_pytorch import plan_flat_merge
 
     source = tmp_path / "source.safetensors"
     output = tmp_path / "output"
@@ -499,7 +499,7 @@ def test_passthrough_graph_does_not_visit_math_device(tmp_path, scale):
 
 
 def test_construction_and_registration_are_independent(monkeypatch):
-    from mergekit.merge_methods import get, register, registered_methods, registry
+    from mixtureforge.merge_methods import get, register, registered_methods, registry
 
     builtin = get("linear")
 

@@ -9,7 +9,7 @@ Pipeline:
 1. build one tiny Qwen3.5 base checkpoint (~4M params, hybrid attention, MTP head);
 2. fine-tune three specialists on three disjoint synthetic tasks
    (``math``, ``code``, ``prose``), producing three real checkpoints;
-3. convert them to a Qwen3.5-MoE with ``mergekit-moe``;
+3. convert them to a Qwen3.5-MoE with ``mixtureforge-moe``;
 4. verify output equality in two independent ways:
 
    **Test A — lossless conversion (exact equality).**
@@ -146,7 +146,7 @@ BASE_CONFIG = {
 def build_tokenizer() -> dict:
     """WordLevel tokenizer whose words map onto the synthetic task tokens.
 
-    ``"math"`` encodes to the math domain token, so mergekit's prompt-based gate
+    ``"math"`` encodes to the math domain token, so mixtureforge's prompt-based gate
     generation (`gate_mode: hidden`) works without any Hub tokenizer. A plain
     WordLevel model is used instead of BPE because it is exact and dependency
     free: one word in, one token out.
@@ -333,10 +333,10 @@ def run_moe(
     gate_mode: str = "router_input",
     allow_all_same: bool = False,
 ) -> str:
-    from mergekit.common import ModelReference
-    from mergekit.moe.config import Expert, MoEMergeConfig
-    from mergekit.options import MergeOptions
-    from mergekit.scripts.moe import build as moe_build
+    from mixtureforge.common import ModelReference
+    from mixtureforge.moe.config import Expert, MoEMergeConfig
+    from mixtureforge.options import MergeOptions
+    from mixtureforge.scripts.moe import build as moe_build
 
     experts = [
         Expert(source_model=ModelReference.parse(path), positive_prompts=list(p))
@@ -456,7 +456,7 @@ def test_b_routing(out_dir: str, math_path: str, code_path: str) -> Result:
 
     Three measurements, each reported for what it actually proves:
 
-    * **B1 router contract (must be exact)** — using mergekit's own
+    * **B1 router contract (must be exact)** — using mixtureforge's own
       `get_router_input_states`, build the two gate vectors from the base model
       and verify every layer scores the matching prompt highest. This is the
       router's contract and it holds exactly.
@@ -487,7 +487,7 @@ def test_b_routing(out_dir: str, math_path: str, code_path: str) -> Result:
     probes = TRAIN_INPUTS[:16]
 
     # ---- B1: the router's contract, measured on its real input space ---- #
-    from mergekit.moe.router import get_router_input_states, tokenize_prompts
+    from mixtureforge.moe.router import get_router_input_states, tokenize_prompts
 
     tokenizer = AutoTokenizer.from_pretrained(math_path)
 
@@ -500,7 +500,7 @@ def test_b_routing(out_dir: str, math_path: str, code_path: str) -> Result:
     g_math, g_code = gate_vector("math"), gate_vector("code")
     router_gates = torch.stack([g_math, g_code], dim=1)  # (layers, experts, hidden)
 
-    # Compare direction only: mergekit normalises gate rows on write, and the
+    # Compare direction only: mixtureforge normalises gate rows on write, and the
     # checkpoint is stored in the base model's dtype.
     saved = torch.nn.functional.normalize(
         moe.model.layers[0].mlp.gate.weight.float(), dim=-1

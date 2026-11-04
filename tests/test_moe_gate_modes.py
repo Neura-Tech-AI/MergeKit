@@ -15,14 +15,14 @@ real train -> merge -> compare experiments:
 
 import pytest
 
-from mergekit.moe.config import Expert, MoEMergeConfig, is_bad_config
+from mixtureforge.moe.config import Expert, MoEMergeConfig, is_bad_config
 
 
 # --------------------------------------------------------------------------- #
 # single-expert configs must be accepted
 # --------------------------------------------------------------------------- #
 def _cfg(n_experts: int, same_prompts: bool = False, same_model: bool = True):
-    from mergekit.common import ModelReference
+    from mixtureforge.common import ModelReference
 
     ref = ModelReference.parse("some/local/model")
     other = ModelReference.parse("some/local/other")
@@ -90,7 +90,7 @@ def test_get_router_input_states_matches_model_inputs():
     import torch
     from transformers import AutoConfig
 
-    from mergekit.moe.router import get_router_input_states
+    from mixtureforge.moe.router import get_router_input_states
 
     from .test_moe_qwen3_5 import (  # noqa: F401  (fixture builder lives there)
         _make_tiny_checkpoint,

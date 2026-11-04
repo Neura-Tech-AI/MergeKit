@@ -6,13 +6,13 @@ import torch
 from safetensors.torch import load_file, save_file
 from transformers import AutoConfig, AutoTokenizer
 
-from mergekit import merge_methods
-from mergekit.config import MergeConfiguration
-from mergekit.io import LazyTensorLoader
-from mergekit.merge import run_merge
-from mergekit.merge_methods import TensorGroup
-from mergekit.merge_methods.preprocessing import truncate_vocabulary
-from mergekit.options import MergeOptions
+from mixtureforge import merge_methods
+from mixtureforge.config import MergeConfiguration
+from mixtureforge.io import LazyTensorLoader
+from mixtureforge.merge import run_merge
+from mixtureforge.merge_methods import TensorGroup
+from mixtureforge.merge_methods.preprocessing import truncate_vocabulary
+from mixtureforge.options import MergeOptions
 from tests.common import make_picollama
 from tests.test_tokenizer import make_tokenizer
 

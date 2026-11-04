@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Arcee AI
 # SPDX-License-Identifier: LGPL-3.0-only
 
-"""Pre-flight check for a 27B class `mergekit-moe` run.
+"""Pre-flight check for a 27B class `mixtureforge-moe` run.
 
 A real Qwen3.5-27B MoE merge is expensive: every expert is ~49 GB of download
 and the output is ~195 GB. This script answers "will it work, and will it fit?"
@@ -11,7 +11,7 @@ It checks, in order:
 
 1. every referenced model resolves and its `model_type` is a legal dense input
 2. the selected output architecture accepts the config (same logic as
-   `mergekit-moe`, so a rejection here is a rejection there)
+   `mixtureforge-moe`, so a rejection here is a rejection there)
 3. `vocab_size`, `hidden_size`, `num_hidden_layers` and `layer_types` agree
    across base and experts -- mismatches produce a silently broken model
 4. the merged MoE geometry and the resulting parameter count
@@ -33,10 +33,10 @@ from typing import Dict, List, Optional
 
 import yaml
 
-from mergekit.common import ModelReference
-from mergekit.moe.config import Expert, MoEMergeConfig
-from mergekit.moe.qwen3_5 import SUPPORTED_MODEL_TYPES, Qwen3_5MoE
-from mergekit.options import MergeOptions
+from mixtureforge.common import ModelReference
+from mixtureforge.moe.config import Expert, MoEMergeConfig
+from mixtureforge.moe.qwen3_5 import SUPPORTED_MODEL_TYPES, Qwen3_5MoE
+from mixtureforge.options import MergeOptions
 
 # architecture -> the dense model types it can turn into experts
 DENSE_INPUTS: Dict[str, tuple] = {

@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Arcee AI
 # SPDX-License-Identifier: LGPL-3.0-only
 
-"""`mergekit-moe` must carry over every file a checkpoint needs, like dense merges.
+"""`mixtureforge-moe` must carry over every file a checkpoint needs, like dense merges.
 
 Dense merges honour `tagalong_files` from the architecture JSON, but the MoE path
 originally wrote only config + weights (+ an optional reserialised tokenizer),
@@ -15,8 +15,8 @@ import tempfile
 
 import pytest
 
-from mergekit.moe import ALL_OUTPUT_ARCHITECTURES
-from mergekit.scripts.moe import (
+from mixtureforge.moe import ALL_OUTPUT_ARCHITECTURES
+from mixtureforge.scripts.moe import (
     MOE_SKIP_FILES,
     copy_tagalong_files,
 )
@@ -39,7 +39,7 @@ def donor(tmp_path):
         "special_tokens_map.json": "{}",
         "architecture.svg": "<svg/>",
         "README.md": "# upstream card",
-        "mergekit_moe.json": "{}",
+        "mixtureforge_moe.json": "{}",
         ".gitattributes": "* filter=lfs",
     }
     for name, body in files.items():
@@ -81,7 +81,7 @@ def test_skips_weights_and_generated_files(donor):
             "model.safetensors.index.json",
             "config.json",
             "README.md",
-            "mergekit_moe.json",
+            "mixtureforge_moe.json",
         ):
             assert name not in copied, f"{name} should not be copied"
             assert not os.path.exists(os.path.join(out, name))
@@ -120,7 +120,7 @@ def test_missing_donor_is_safe():
 
 
 def test_skip_list_contains_generated_files():
-    for name in ("config.json", "readme.md", "mergekit_moe.json"):
+    for name in ("config.json", "readme.md", "mixtureforge_moe.json"):
         assert name in MOE_SKIP_FILES
 
 
@@ -134,7 +134,7 @@ def test_every_moe_arch_exposes_tagalong_files():
 
 
 def test_qwen3_5_declares_tokenizer_files():
-    from mergekit.moe.qwen3_5 import Qwen3_5MoE
+    from mixtureforge.moe.qwen3_5 import Qwen3_5MoE
 
     files = Qwen3_5MoE().tagalong_files()
     for expected in (
@@ -149,7 +149,7 @@ def test_qwen3_5_declares_tokenizer_files():
 
 def test_other_archs_still_work_without_tagalong():
     """The default implementation must not require overrides."""
-    from mergekit.moe.mixtral import MixtralMoE
+    from mixtureforge.moe.mixtral import MixtralMoE
 
     assert MixtralMoE().tagalong_files() == []
 
@@ -164,10 +164,10 @@ def test_moe_merge_preserves_file_set():
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tools", "demo"))
     from make_tiny_qwen35 import build
 
-    from mergekit.common import ModelReference
-    from mergekit.moe.config import Expert, MoEMergeConfig
-    from mergekit.options import MergeOptions
-    from mergekit.scripts.moe import build as moe_build
+    from mixtureforge.common import ModelReference
+    from mixtureforge.moe.config import Expert, MoEMergeConfig
+    from mixtureforge.options import MergeOptions
+    from mixtureforge.scripts.moe import build as moe_build
 
     with tempfile.TemporaryDirectory() as tmp:
         src = build(tmp, "src", seed=0, vlm_prefix=False, with_mtp=True)
@@ -220,7 +220,7 @@ def test_qwen3_5_moe_rejects_sparse_inputs():
 
     Every other MoE architecture accepts dense inputs only; Qwen3.5 must match.
     """
-    from mergekit.moe.qwen3_5 import SUPPORTED_MODEL_TYPES
+    from mixtureforge.moe.qwen3_5 import SUPPORTED_MODEL_TYPES
 
     assert "qwen3_5_moe_text" not in SUPPORTED_MODEL_TYPES
     assert "qwen3_5_moe" not in SUPPORTED_MODEL_TYPES
@@ -228,8 +228,8 @@ def test_qwen3_5_moe_rejects_sparse_inputs():
 
 def test_dense_input_restriction_matches_sibling_archs():
     """Siblings reject wrong `model_type` inline; Qwen3.5 must do the same."""
-    from mergekit.moe.config import Expert, MoEMergeConfig
-    from mergekit.moe.qwen3_5 import Qwen3_5MoE
+    from mixtureforge.moe.config import Expert, MoEMergeConfig
+    from mixtureforge.moe.qwen3_5 import Qwen3_5MoE
 
     arch = Qwen3_5MoE()
     cfg = MoEMergeConfig(
@@ -241,7 +241,7 @@ def test_dense_input_restriction_matches_sibling_archs():
 
     # every input, including the base, is checked (as in mixtral/deepseek/qwen)
     checked = []
-    src = pathlib.Path("mergekit/moe/qwen3_5.py").read_text()
+    src = pathlib.Path("mixtureforge/moe/qwen3_5.py").read_text()
     body = src[src.index("def supports_config") : src.index("def _generate_config")]
     assert "config.base_model" in body, "base model must be validated too"
     assert "config.shared_experts" in body, "shared experts must be validated too"
@@ -253,8 +253,8 @@ def test_dense_input_restriction_matches_sibling_archs():
 
 
 def test_card_template_renders():
-    from mergekit.moe.config import Expert, MoEMergeConfig
-    from mergekit.scripts.moe import generate_moe_card
+    from mixtureforge.moe.config import Expert, MoEMergeConfig
+    from mixtureforge.scripts.moe import generate_moe_card
 
     cfg = MoEMergeConfig(
         base_model="org/base",
@@ -279,8 +279,8 @@ def test_card_template_renders():
 
 
 def test_card_lists_shared_experts():
-    from mergekit.moe.config import Expert, MoEMergeConfig
-    from mergekit.scripts.moe import generate_moe_card
+    from mixtureforge.moe.config import Expert, MoEMergeConfig
+    from mixtureforge.scripts.moe import generate_moe_card
 
     cfg = MoEMergeConfig(
         base_model="org/base",
@@ -297,8 +297,8 @@ def test_card_lists_shared_experts():
 
 def test_card_failure_does_not_break_merge():
     """A bad card path must be logged, never raised out of build()."""
-    from mergekit.moe.config import Expert, MoEMergeConfig
-    from mergekit.scripts.moe import generate_moe_card
+    from mixtureforge.moe.config import Expert, MoEMergeConfig
+    from mixtureforge.scripts.moe import generate_moe_card
 
     cfg = MoEMergeConfig(
         base_model="org/base",
@@ -310,7 +310,7 @@ def test_card_failure_does_not_break_merge():
     with pytest.raises(OSError):
         generate_moe_card(cfg, "", "Qwen3.5 MoE", missing)
 
-    src = pathlib.Path("mergekit/scripts/moe.py").read_text()
+    src = pathlib.Path("mixtureforge/scripts/moe.py").read_text()
     body = src[src.index("if merge_options.write_model_card") :]
     body = body[body.index("try:") :]
     assert "except Exception" in body

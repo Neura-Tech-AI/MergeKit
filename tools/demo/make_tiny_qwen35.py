@@ -209,7 +209,7 @@ dtype: float32
         fp.write(moe_vlm_yaml)
     print(f"wrote {os.path.join(args.out, 'moe_vlm.yml')}")
     print("\nNow run:")
-    print(f"  mergekit-moe {args.out}/moe.yml {args.out}/out-moe --copy-tokenizer")
+    print(f"  mixtureforge-moe {args.out}/moe.yml {args.out}/out-moe --copy-tokenizer")
 
 
 if __name__ == "__main__":

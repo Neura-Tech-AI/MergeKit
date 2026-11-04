@@ -2,14 +2,14 @@ import torch
 import transformers
 from safetensors.torch import save_file
 
-from mergekit.architecture import arch_info_for_config
-from mergekit.architecture.auto import infer_architecture_info
-from mergekit.architecture.conversion import (
+from mixtureforge.architecture import arch_info_for_config
+from mixtureforge.architecture.auto import infer_architecture_info
+from mixtureforge.architecture.conversion import (
     can_convert_checkpoint_keys,
     convert_checkpoint_tensors,
 )
-from mergekit.common import ModelReference
-from mergekit.options import MergeOptions
+from mixtureforge.common import ModelReference
+from mixtureforge.options import MergeOptions
 
 
 def test_qwen3_moe_expert_weights_convert_to_v5_layout():

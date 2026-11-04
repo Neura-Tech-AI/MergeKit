@@ -5,7 +5,7 @@
 
 The published checkpoint is ~49 GB in bf16, which cannot be downloaded or merged
 inside a small sandbox. This script copies its **architecture** exactly and only
-shrinks the widths, so a real `mergekit-moe` run exercises the same code path:
+shrinks the widths, so a real `mixtureforge-moe` run exercises the same code path:
 
 * 64 layers (the real count)
 * the real hybrid pattern -- 48 `linear_attention` + 16 `full_attention`, full

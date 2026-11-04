@@ -157,7 +157,7 @@ def check_inference(path: str) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", required=True, help="dense Qwen3.5 checkpoint dir")
-    parser.add_argument("--moe", required=True, help="mergekit-moe output dir")
+    parser.add_argument("--moe", required=True, help="mixtureforge-moe output dir")
     args = parser.parse_args()
 
     base_loaded = check_load(args.base)

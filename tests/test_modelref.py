@@ -1,6 +1,6 @@
 import pytest
 
-from mergekit.common import ModelPath, ModelReference
+from mixtureforge.common import ModelPath, ModelReference
 
 
 class TestModelReference:

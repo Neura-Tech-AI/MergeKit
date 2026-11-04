@@ -7,7 +7,7 @@ The published `sartajbhuvaji/unfuse-Qwen3.8-27B-text` is ~49 GB, far beyond a
 normal test machine, so `tools/demo/make_27b_clone.py` reproduces its
 architecture exactly -- 64 layers, 48 linear + 16 full attention, output gating,
 untied embeddings, an `mtp.*` head -- and only shrinks the widths. These tests
-run a real `mergekit-moe` merge over that clone and assert the parts that would
+run a real `mixtureforge-moe` merge over that clone and assert the parts that would
 silently break a 27B run: the output geometry, the tokenizer round-trip and the
 file manifest.
 """
@@ -59,15 +59,15 @@ def test_tokenizer_roundtrip_encodes_words():
 
 @pytest.fixture(scope="module")
 def merged(tmp_path_factory):
-    """3 dense clones -> one real mergekit-moe run (64 layers each)."""
+    """3 dense clones -> one real mixtureforge-moe run (64 layers each)."""
     import tempfile
 
     from make_27b_clone import build
 
-    from mergekit.common import ModelReference
-    from mergekit.moe.config import Expert, MoEMergeConfig
-    from mergekit.options import MergeOptions
-    from mergekit.scripts.moe import build as moe_build
+    from mixtureforge.common import ModelReference
+    from mixtureforge.moe.config import Expert, MoEMergeConfig
+    from mixtureforge.options import MergeOptions
+    from mixtureforge.scripts.moe import build as moe_build
 
     root = tempfile.mkdtemp()
     a = build(root, "dense-a", seed=0)
@@ -160,7 +160,7 @@ def test_merge_writes_card_and_aux_files(merged):
     for required in (
         "README.md",
         "config.json",
-        "mergekit_moe_config.yml",
+        "mixtureforge_moe_config.yml",
         "model.safetensors",
         "tokenizer.json",
         "tokenizer_config.json",

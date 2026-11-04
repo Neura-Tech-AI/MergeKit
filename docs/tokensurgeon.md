@@ -1,6 +1,6 @@
-# mergekit-tokensurgeon
+# mixtureforge-tokensurgeon
 
-`mergekit-tokensurgeon` is a command line utility for "transplanting" tokenizers between models. It reconstructs embeddings for a donor tokenizer inside the base model's embedding space so that the resulting model can operate with the donor vocabulary and ID mapping.
+`mixtureforge-tokensurgeon` is a command line utility for "transplanting" tokenizers between models. It reconstructs embeddings for a donor tokenizer inside the base model's embedding space so that the resulting model can operate with the donor vocabulary and ID mapping.
 
 The default approach uses **Orthogonal Matching Pursuit (OMP)** to approximate unseen token embeddings as sparse combinations of tokens shared between the two vocabularies. This provides a training-free way to align tokenizers with minimal loss in downstream performance. The method is described in detail in the paper [*Training-Free Tokenizer Transplantation via Orthogonal Matching Pursuit*](https://arxiv.org/abs/2506.06607).
 
@@ -9,7 +9,7 @@ Other approximation strategies are also implemented (e.g. common-vocabulary inte
 ## Usage
 
 ```bash
-mergekit-tokensurgeon \
+mixtureforge-tokensurgeon \
   path/to/base_model \
   path/to/donor_model \
   ./output_model \
@@ -28,11 +28,11 @@ This command creates a new model at `./output_model` whose tokenizer matches the
 - `--magikarp`: Filter out poorly trained tokens using the Magikarp heuristic before approximation.
 - Standard mergekit options such as `--device` and `--trust-remote-code` are also accepted.
 
-Run `mergekit-tokensurgeon --help` for the full list of arguments.
+Run `mixtureforge-tokensurgeon --help` for the full list of arguments.
 
 ## Approximation Methods
 
-`mergekit-tokensurgeon` implements a number of strategies for generating embeddings for tokens that do not exist in the base model. The method is selected with `--approximation-method`:
+`mixtureforge-tokensurgeon` implements a number of strategies for generating embeddings for tokens that do not exist in the base model. The method is selected with `--approximation-method`:
 
 - **omp** – Orthogonal Matching Pursuit (default). Approximates each missing token as a sparse linear combination of up to `--k` shared tokens.
 - **common_interpolation** – Finds the nearest overlapping tokens and interpolates between them using one of several weighting schemes (controlled with `--weight-scheme`).
@@ -51,4 +51,4 @@ Run `mergekit-tokensurgeon --help` for the full list of arguments.
 
 ## Further Reading
 
-The theoretical motivation, implementation details and empirical evaluation of the OMP approach are presented in the accompanying paper. The `mergekit-tokensurgeon` tool exposes these techniques for practical use in merging workflows.
+The theoretical motivation, implementation details and empirical evaluation of the OMP approach are presented in the accompanying paper. The `mixtureforge-tokensurgeon` tool exposes these techniques for practical use in merging workflows.

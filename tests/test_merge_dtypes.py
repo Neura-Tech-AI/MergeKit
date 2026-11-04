@@ -4,15 +4,18 @@ import pytest
 import torch
 from safetensors.torch import load_file, save_file
 
-from mergekit import merge_methods
-from mergekit.common import ModelReference
-from mergekit.config import MergeConfiguration
-from mergekit.graph import Executor
-from mergekit.merge_methods import TensorBatch, TensorGroup, merge_state_dicts
-from mergekit.merge_methods.task_adapter import TensorDictWrapper
-from mergekit.options import MergeOptions
-from mergekit.scripts.merge_raw_pytorch import RawPyTorchMergeConfig, plan_flat_merge
-from mergekit.tokenizer import PermutedVocabulary
+from mixtureforge import merge_methods
+from mixtureforge.common import ModelReference
+from mixtureforge.config import MergeConfiguration
+from mixtureforge.graph import Executor
+from mixtureforge.merge_methods import TensorBatch, TensorGroup, merge_state_dicts
+from mixtureforge.merge_methods.task_adapter import TensorDictWrapper
+from mixtureforge.options import MergeOptions
+from mixtureforge.scripts.merge_raw_pytorch import (
+    RawPyTorchMergeConfig,
+    plan_flat_merge,
+)
+from mixtureforge.tokenizer import PermutedVocabulary
 from tests.common import make_picollama, run_and_check_merge
 
 
@@ -368,7 +371,7 @@ def test_yaml_mixed_checkpoint_precisions(tmp_path, dtype, out_dtype):
     )
 
     def check(output):
-        from mergekit.io import LazyTensorLoader
+        from mixtureforge.io import LazyTensorLoader
 
         loader = LazyTensorLoader.from_disk(output)
         for name in loader.index.tensor_paths:
@@ -384,7 +387,7 @@ def test_yaml_mixed_checkpoint_precisions(tmp_path, dtype, out_dtype):
 def test_dtype_intermediates_released_between_chunks(batched, dtype, device, direct):
     import weakref
 
-    from mergekit.merge_methods import BatchOptions, TensorGroup, merge_method
+    from mixtureforge.merge_methods import BatchOptions, TensorGroup, merge_method
 
     models = [
         {
@@ -492,7 +495,7 @@ def test_direct_and_state_dict_calls_share_dtype_policy(method_name, dtype, out_
 
 @pytest.mark.parametrize("option", ["dtype", "out_dtype"])
 def test_direct_call_validates_dtype_before_execution(option):
-    from mergekit.merge_methods import TensorGroup, merge_method
+    from mixtureforge.merge_methods import TensorGroup, merge_method
 
     @merge_method(name="never_execute")
     def kernel(group: TensorGroup) -> torch.Tensor:

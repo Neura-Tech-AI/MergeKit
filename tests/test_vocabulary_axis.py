@@ -11,24 +11,27 @@ from transformers import (
     T5Config,
 )
 
-from mergekit.architecture import (
+from mixtureforge.architecture import (
     ConfiguredModelArchitecture,
     WeightInfo,
     arch_info_for_config,
 )
-from mergekit.architecture.auto import get_transformers_info, infer_vocabulary_axes
-from mergekit.architecture.json_definitions import NAME_TO_ARCH
-from mergekit.common import ImmutableMap, ModelReference
-from mergekit.config import MergeConfiguration
-from mergekit.io.tasks import GatherTensors
-from mergekit.merge import run_merge
-from mergekit.merge_methods import TensorGroup
-from mergekit.merge_methods.base import TensorMetadata
-from mergekit.merge_methods.preprocessing import truncate_vocabulary
-from mergekit.options import MergeOptions
-from mergekit.scripts.tokensurgeon import get_embedding_info, remap_auxiliary_vocabulary
-from mergekit.tokenizer import BuildTokenizer, PermutedVocabulary, TokenizerInfo
-from mergekit.tokenizer.config import ModelTokenEmbedding, TokenEmbeddingConfig
+from mixtureforge.architecture.auto import get_transformers_info, infer_vocabulary_axes
+from mixtureforge.architecture.json_definitions import NAME_TO_ARCH
+from mixtureforge.common import ImmutableMap, ModelReference
+from mixtureforge.config import MergeConfiguration
+from mixtureforge.io.tasks import GatherTensors
+from mixtureforge.merge import run_merge
+from mixtureforge.merge_methods import TensorGroup
+from mixtureforge.merge_methods.base import TensorMetadata
+from mixtureforge.merge_methods.preprocessing import truncate_vocabulary
+from mixtureforge.options import MergeOptions
+from mixtureforge.scripts.tokensurgeon import (
+    get_embedding_info,
+    remap_auxiliary_vocabulary,
+)
+from mixtureforge.tokenizer import BuildTokenizer, PermutedVocabulary, TokenizerInfo
+from mixtureforge.tokenizer.config import ModelTokenEmbedding, TokenEmbeddingConfig
 from tests.test_tokenizer import make_tokenizer
 
 

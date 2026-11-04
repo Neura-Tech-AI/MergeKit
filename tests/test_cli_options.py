@@ -15,7 +15,7 @@ from click.testing import CliRunner
 
 click = pytest.importorskip("click")
 
-from mergekit.options import MergeOptions, add_merge_options  # noqa: E402
+from mixtureforge.options import MergeOptions, add_merge_options  # noqa: E402
 
 
 def _make_command():

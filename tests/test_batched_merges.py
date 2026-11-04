@@ -5,8 +5,8 @@ import pytest
 import torch
 from pydantic import Field, PositiveFloat, ValidationError
 
-from mergekit import merge_methods
-from mergekit.merge_methods import (
+from mixtureforge import merge_methods
+from mixtureforge.merge_methods import (
     BasePolicy,
     BatchOptions,
     BatchParameter,
@@ -135,7 +135,9 @@ def _reference_slerp(a, b, t):
 def test_slerp_mixed_geometries_varying_coefficients_and_base_order(
     monkeypatch, device, dtype, chunk_elements
 ):
-    monkeypatch.setattr("mergekit.merge_methods.slerp._CHUNK_ELEMENTS", chunk_elements)
+    monkeypatch.setattr(
+        "mixtureforge.merge_methods.slerp._CHUNK_ELEMENTS", chunk_elements
+    )
     method = merge_methods.get("slerp")
     calls = _record_calls(monkeypatch, method)
     pairs = [
@@ -301,9 +303,9 @@ def test_native_kernels_keep_autograd_and_borrowed_inputs(method_name, device):
 
 
 def test_chunked_slerp_gradients(monkeypatch):
-    from mergekit.merge_methods.slerp import slerp
+    from mixtureforge.merge_methods.slerp import slerp
 
-    monkeypatch.setattr("mergekit.merge_methods.slerp._CHUNK_ELEMENTS", 4)
+    monkeypatch.setattr("mixtureforge.merge_methods.slerp._CHUNK_ELEMENTS", 4)
     generator = torch.Generator().manual_seed(123)
     a = torch.randn(2, 5, generator=generator, dtype=torch.float64, requires_grad=True)
     b = torch.randn(2, 5, generator=generator, dtype=torch.float64, requires_grad=True)
@@ -493,7 +495,7 @@ def test_state_dict_per_group_values_keep_alignment_across_buffers():
 
 
 def test_native_signature_rejects_group_annotations():
-    from mergekit.merge_methods import PerInput
+    from mixtureforge.merge_methods import PerInput
 
     def kernel(batch: TensorBatch, weight: PerInput[float]) -> torch.Tensor:
         return sum(batch.tensors)
@@ -648,10 +650,10 @@ def test_embedding_mismatch_fails_before_bucketing(monkeypatch):
 def test_graph_adapter_preserves_optional_singleton_fallback(
     method_name, count, dtype, out_dtype
 ):
-    from mergekit.architecture import WeightInfo
-    from mergekit.common import ImmutableMap, ModelReference
-    from mergekit.io.tasks import GatherTensors
-    from mergekit.merge_methods.task_adapter import ExecuteMergeMethodTask
+    from mixtureforge.architecture import WeightInfo
+    from mixtureforge.common import ImmutableMap, ModelReference
+    from mixtureforge.io.tasks import GatherTensors
+    from mixtureforge.merge_methods.task_adapter import ExecuteMergeMethodTask
 
     refs = tuple(
         ModelReference.model_validate(name) for name in ["base", "a", "b"][:count]

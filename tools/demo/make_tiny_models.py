@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Build two tiny random Llama checkpoints for offline mergekit experiments.
+"""Build two tiny random Llama checkpoints for offline mixtureforge experiments.
 
 Hugging Face is not reachable from the sandbox, so real checkpoints cannot be
-downloaded. These ~115k-parameter models let every code path in mergekit run
+downloaded. These ~115k-parameter models let every code path in mixtureforge run
 locally: graph construction, lazy loading, merge methods, sharding, tokenizer
 copying and model card generation.
 
@@ -130,7 +130,9 @@ def main() -> None:
 
     write_configs(out_dir)
     print("\nNow run:")
-    print(f"  mergekit-yaml {out_dir}/linear.yml {out_dir}/out-linear --copy-tokenizer")
+    print(
+        f"  mixtureforge-yaml {out_dir}/linear.yml {out_dir}/out-linear --copy-tokenizer"
+    )
 
 
 if __name__ == "__main__":

@@ -1,14 +1,14 @@
-# mergekit-evolve
+# mixtureforge-evolve
 
-`mergekit-evolve` is a script that uses an evolutionary algorithm (CMA-ES) to optimize the parameters of a merge against model metrics. This is inspired by SakanaAI's [Evolutionary Optimization of Model Merging Recipes](https://arxiv.org/abs/2403.13187), in particular their parameter-space approach. `mergekit-evolve` uses EleutherAI's [Language Model Evaluation Harness](https://github.com/EleutherAI/lm-evaluation-harness) to define and evaluate the scoring function. The script is set up to be run either single-node or on a Ray cluster and has a few different strategies for scheduling operations depending on your particular configuration of compute.
+`mixtureforge-evolve` is a script that uses an evolutionary algorithm (CMA-ES) to optimize the parameters of a merge against model metrics. This is inspired by SakanaAI's [Evolutionary Optimization of Model Merging Recipes](https://arxiv.org/abs/2403.13187), in particular their parameter-space approach. `mixtureforge-evolve` uses EleutherAI's [Language Model Evaluation Harness](https://github.com/EleutherAI/lm-evaluation-harness) to define and evaluate the scoring function. The script is set up to be run either single-node or on a Ray cluster and has a few different strategies for scheduling operations depending on your particular configuration of compute.
 
 ## Installation
 
-Install `mergekit` with the `evolve` feature:
+Install `mixtureforge` with the `evolve` feature:
 
 ```sh
 git clone https://github.com/arcee-ai/mergekit.git
-cd mergekit
+cd MergeKit
 
 pip install -e .[evolve]
 ```
@@ -28,7 +28,7 @@ pip install flash-attn
 
 ## Configuration
 
-`mergekit-evolve` takes in a YAML configuration file that defines how the merge is parameterized and what metrics to optimize. The general syntax is as follows:
+`mixtureforge-evolve` takes in a YAML configuration file that defines how the merge is parameterized and what metrics to optimize. The general syntax is as follows:
 
 ```yml
 genome:
@@ -56,7 +56,7 @@ tasks:
 
 ### Genome Definition
 
-The `genome` section of the configuration file defines the parameter space that `mergekit-evolve` will be optimizing in.
+The `genome` section of the configuration file defines the parameter space that `mixtureforge-evolve` will be optimizing in.
 
 #### `models`
 
@@ -90,7 +90,7 @@ If set to `true`, then parameter values will be interpolated across layers inste
 
 #### `filters`
 
-Accepts a list of filters, as in `mergekit-yaml`, by which to separate the parameters. So, for example, setting filters as below for a Llama-based merge:
+Accepts a list of filters, as in `mixtureforge-yaml`, by which to separate the parameters. So, for example, setting filters as below for a Llama-based merge:
 
 ```yaml
 filters:
@@ -104,15 +104,15 @@ Will divide up the merge parameters into three groups - self attention parameter
 
 To evaluate the produced merges you need to specify a list of tasks supported by the EleutherAI LM evaluation harness. This can be either [built in tasks](https://github.com/EleutherAI/lm-evaluation-harness/tree/main/lm_eval/tasks) (don't be naughty) or tasks you define yourself (see the [New Task Guide](https://github.com/EleutherAI/lm-evaluation-harness/blob/main/docs/new_task_guide.md) for how). If your task does not use `acc` as the metric then you must specify the correct metric name. Each task can also optionally have a weight associated.
 
-`mergekit-evolve` aims to maximize the score of the merge, so if you are using any tasks or metrics where a lower score is better (like perplexity) be sure to assign a negative weight to that task.
+`mixtureforge-evolve` aims to maximize the score of the merge, so if you are using any tasks or metrics where a lower score is better (like perplexity) be sure to assign a negative weight to that task.
 
-## Running `mergekit-evolve`
+## Running `mixtureforge-evolve`
 
 ```sh
-mergekit-evolve [OPTIONS] --storage-path PATH GENOME_CONFIG_PATH
+mixtureforge-evolve [OPTIONS] --storage-path PATH GENOME_CONFIG_PATH
 ```
 
-`mergekit-evolve` needs a storage path specified, where it will save the input models, merges to evaluate, and the config for the current best merge evaluated. If you are not using in-memory merging this can require a _lot_ of space - expect at least one fp16 model per GPU.
+`mixtureforge-evolve` needs a storage path specified, where it will save the input models, merges to evaluate, and the config for the current best merge evaluated. If you are not using in-memory merging this can require a _lot_ of space - expect at least one fp16 model per GPU.
 
 Some important options:
 
@@ -134,11 +134,11 @@ Uses Ray placement groups to ensure merges and their evaluations happen on the s
 
 ### Evaluation LLM Backend
 
-By default `mergekit-evolve` will use the `hf` backend for `lm-eval`. To use vLLM instead, pass the `--vllm` flag.
+By default `mixtureforge-evolve` will use the `hf` backend for `lm-eval`. To use vLLM instead, pass the `--vllm` flag.
 
 ### On-Disk vs. In-Memory
 
-By default `mergekit-evolve` will perform merges, write the result to disk, then start up an instance of lm-eval pointing at that path. This is a safe default and will generally always work but also causes a lot of GPU downtime and eats disk space. When using the `pool` scheduling strategy, you have the option to instead keep a model resident in memory and directly update its parameters instead of merging to disk. This is much faster and uses no additional disk space. However, it does involve mucking around in the internals of vLLM and the LM evaluation harness. So it might break at any moment! Choose wisely. Use `--in-memory` to enable this mode.
+By default `mixtureforge-evolve` will perform merges, write the result to disk, then start up an instance of lm-eval pointing at that path. This is a safe default and will generally always work but also causes a lot of GPU downtime and eats disk space. When using the `pool` scheduling strategy, you have the option to instead keep a model resident in memory and directly update its parameters instead of merging to disk. This is much faster and uses no additional disk space. However, it does involve mucking around in the internals of vLLM and the LM evaluation harness. So it might break at any moment! Choose wisely. Use `--in-memory` to enable this mode.
 
 ### Task search path
 
@@ -160,21 +160,21 @@ Initial value of sigma for CMA-ES. No need to play with this unless you really k
 
 ### WandB logging
 
-`mergekit-evolve` supports logging metrics to Weights & Biases. Enable this functionality with the `--wandb` flag. Project and entity names can be overridden with the `--wandb-project` and `--wandb-entity` options.
+`mixtureforge-evolve` supports logging metrics to Weights & Biases. Enable this functionality with the `--wandb` flag. Project and entity names can be overridden with the `--wandb-project` and `--wandb-entity` options.
 
 ### Example
 
 ```sh
-mergekit-evolve --strategy pool --wandb --wandb-project mergekit-evolve --wandb-entity arcee-ai --storage-path /path/to/mergekit-evolve/ ./config.yml
+mixtureforge-evolve --strategy pool --wandb --wandb-project mixtureforge-evolve --wandb-entity arcee-ai --storage-path /path/to/mixtureforge-evolve/ ./config.yml
 ```
 
 ## Output
 
-`mergekit-evolve` will write the merge configuration for the best merge found so far to the storage path with the filename `best_config.yaml`. If you're using WandB it will also log the config as an artifact. The script will keep running until a KeyboardInterrupt is received or `--max-fevals` is generously exceeded.
+`mixtureforge-evolve` will write the merge configuration for the best merge found so far to the storage path with the filename `best_config.yaml`. If you're using WandB it will also log the config as an artifact. The script will keep running until a KeyboardInterrupt is received or `--max-fevals` is generously exceeded.
 
 ## Caveats
 
-`mergekit-evolve` is a work in progress and has probably not been tested on your specific configuration. Keep an eye on the output before leaving it running, and if you run in to any issues don't hesitate to file an issue!
+`mixtureforge-evolve` is a work in progress and has probably not been tested on your specific configuration. Keep an eye on the output before leaving it running, and if you run in to any issues don't hesitate to file an issue!
 
 ## Acknowledgements
 

@@ -3,14 +3,14 @@ from typing import Dict, Optional
 import pytest
 from transformers import AutoConfig
 
-from mergekit.config import (
+from mixtureforge.config import (
     InputModelDefinition,
     InputSliceDefinition,
     MergeConfiguration,
     OutputSliceDefinition,
     ParameterSetting,
 )
-from mergekit.io import LazyTensorLoader
+from mixtureforge.io import LazyTensorLoader
 from tests.common import (
     make_gpt2size,
     make_picogranite,

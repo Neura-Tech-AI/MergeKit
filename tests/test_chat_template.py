@@ -3,7 +3,7 @@ from typing import Optional
 import pytest
 from transformers import AutoTokenizer
 
-from mergekit.config import InputModelDefinition, MergeConfiguration
+from mixtureforge.config import InputModelDefinition, MergeConfiguration
 from tests.common import make_picollama, run_and_check_merge
 from tests.test_tokenizer import make_tokenizer
 

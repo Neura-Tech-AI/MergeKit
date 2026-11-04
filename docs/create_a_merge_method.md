@@ -11,7 +11,7 @@ algorithms that need tensor metadata, or work that does not benefit from vectori
 ```python
 import torch
 
-from mergekit.merge_methods import TensorGroup, merge_method, merge_tensors
+from mixtureforge.merge_methods import TensorGroup, merge_method, merge_tensors
 
 
 @merge_method(name="scaled_copy")
@@ -41,7 +41,7 @@ also be called directly: `method = merge_method(kernel, name="my_method")`.
 import torch
 from typing import Annotated
 
-from mergekit.merge_methods import (
+from mixtureforge.merge_methods import (
     BatchParameter, ParameterScope, TensorBatch, merge_method,
 )
 
@@ -105,7 +105,7 @@ Integer gradients must also resolve to an integer after interpolation.
 Structural requirements belong to the method definition:
 
 ```python
-from mergekit.merge_methods import BasePolicy, InputContract
+from mixtureforge.merge_methods import BasePolicy, InputContract
 
 
 @merge_method(
@@ -133,7 +133,7 @@ Input and non-base arities can be bounded independently.
 Use `merge_tensors` for inputs contributing to one output tensor:
 
 ```python
-from mergekit.merge_methods import merge_tensors
+from mixtureforge.merge_methods import merge_tensors
 
 merged_tensor = merge_tensors(
     [tensor_a, tensor_b],
@@ -157,8 +157,8 @@ even when custom IDs are supplied. Use `merge_state_dicts` for checkpoint buffer
 For multiple outputs or explicit tensor metadata, pass a sequence of groups:
 
 ```python
-from mergekit import merge_methods
-from mergekit.merge_methods import BatchOptions, PerGroupValues, TensorGroup
+from mixtureforge import merge_methods
+from mixtureforge.merge_methods import BatchOptions, PerGroupValues, TensorGroup
 
 groups = [
     TensorGroup.from_tensors(
@@ -193,7 +193,7 @@ defaults and scalar arguments are broadcast.
 Modules and state dictionaries also have a convenience adapter:
 
 ```python
-from mergekit.merge_methods import merge_state_dicts
+from mixtureforge.merge_methods import merge_state_dicts
 
 merged = merge_state_dicts(
     {"a": model_a, "b": model_b},
@@ -297,7 +297,7 @@ with `is_base=True`, accessible through `group.base` and excluded from `group.no
 To make a method available by name, register it:
 
 ```python
-from mergekit.merge_methods import register
+from mixtureforge.merge_methods import register
 
 register(weighted_average)
 ```
@@ -306,7 +306,7 @@ register(weighted_average)
 currently registered methods. Built-ins are already registered; custom methods
 can be called without registration by passing the method object.
 
-All built-ins are assembled in `mergekit/merge_methods/registry.py`. Add the method
+All built-ins are assembled in `mixtureforge/merge_methods/registry.py`. Add the method
 import and its object to that module's registration sequence.
 
 Read method metadata directly from `method.spec.name`, `method.spec.pretty_name`,
@@ -322,7 +322,7 @@ wrapped with `BatchedMergeMethod(spec, implementation)`.
 Use explicit `ParameterSpec` objects from `mergekit.merge_methods.base` when a
 method's parameters depend on its construction options or cannot be expressed in
 a Python signature. The built-in
-[`GeneralizedTaskArithmeticMerge`](../mergekit/merge_methods/generalized_task_arithmetic.py)
+[`GeneralizedTaskArithmeticMerge`](../mixtureforge/merge_methods/generalized_task_arithmetic.py)
 uses this path for its sparsification-dependent parameters and its `"lambda"`
 parameter.
 

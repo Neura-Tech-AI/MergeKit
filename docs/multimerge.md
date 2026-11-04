@@ -1,8 +1,8 @@
-# mergekit-multi: Multi-Stage Model Merging
+# mixtureforge-multi: Multi-Stage Model Merging
 
-## What is mergekit-multi?
+## What is mixtureforge-multi?
 
-`mergekit-multi` is a command-line tool for executing complex model merging workflows with multiple interdependent stages. It allows you to:
+`mixtureforge-multi` is a command-line tool for executing complex model merging workflows with multiple interdependent stages. It allows you to:
 
 1. Chain multiple merge operations together
 2. Use outputs from previous merges as inputs to subsequent ones
@@ -13,7 +13,7 @@
 
 Basic command structure:
 ```bash
-mergekit-multi <config.yaml> \
+mixtureforge-multi <config.yaml> \
   --intermediate-dir ./intermediates \
   ([--out-path ./final-merge] | if config has unnamed merge) \
   [options]
@@ -24,7 +24,7 @@ mergekit-multi <config.yaml> \
 Create a YAML file with multiple merge configurations separated by `---`. Each should contain:
 
 - `name`: Unique identifier for intermediate merges (except final merge)
-- Standard mergekit configuration parameters
+- Standard mixtureforge configuration parameters
 
 Example with Final Merge (`multimerge.yaml`):
 ```yaml
@@ -82,6 +82,6 @@ merge_method: linear
 
 ## How It Works
 
-When you run `mergekit-multi`, it topologically sorts your merge configurations to determine the correct order of execution. The merges are then processed sequentially, using outputs from previous steps as inputs for subsequent ones as needed.
+When you run `mixtureforge-multi`, it topologically sorts your merge configurations to determine the correct order of execution. The merges are then processed sequentially, using outputs from previous steps as inputs for subsequent ones as needed.
 
 All intermediate merges are saved in your specified `--intermediate-dir` using their configured names. By default, the tool will skip any merge operations that already have existing output files. To force re-execution of all merges, use the `--no-lazy` flag.

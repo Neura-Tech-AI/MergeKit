@@ -1,7 +1,7 @@
 import torch
 from transformers import BatchEncoding, LlamaConfig, LlamaForCausalLM
 
-from mergekit.moe.router import get_hidden_states
+from mixtureforge.moe.router import get_hidden_states
 
 
 def _left_padded(sequences, pad_token_id=1):

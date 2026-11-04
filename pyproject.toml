@@ -3,12 +3,19 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mergekit"
+name = "mixtureforge"
 description = "Tools for merging pre-trained large language models"
 readme = "README.md"
 license = { text = "LGPL-3.0-only" }
 version = "0.1.5"
-authors = [{ name = "Charles Goddard", email = "chargoddard@gmail.com" }]
+# mixtureforge is a fork of mergekit. The LGPL requires the original
+# attribution to stay, so it comes first and Neura-Tech-AI is added after it.
+authors = [
+    { name = "Charles Goddard", email = "chargoddard@gmail.com" },
+    { name = "Neura-Tech-AI" },
+]
+maintainers = [{ name = "Neura-Tech-AI" }]
+keywords = ["mergekit", "mixture-of-experts", "moe", "model merging", "llm"]
 requires-python = ">=3.10"
 dependencies = [
     "torch>=2.0.0",
@@ -35,40 +42,41 @@ test = ["pytest>=8.4.0,<9"]
 evolve = ["ray", "cma", "lm_eval", "wandb"]
 
 [project.urls]
-repository = "https://github.com/cg123/mergekit"
+repository = "https://github.com/Neura-Tech-AI/MergeKit"
+upstream = "https://github.com/arcee-ai/mergekit"
 
 
 [project.scripts]
-mergekit-yaml = "mergekit.scripts.run_yaml:main"
-mergekit-legacy = "mergekit.scripts.legacy:main"
-mergekit-layershuffle = "mergekit.scripts.layershuffle:main"
-bakllama = "mergekit.scripts.bakllama:main"
-mergekit-moe = "mergekit.scripts.moe:main"
-mergekit-tokensurgeon = "mergekit.scripts.tokensurgeon:main"
-mergekit-extract-lora = "mergekit.scripts.extract_lora:main"
-mergekit-evolve = "mergekit.scripts.evolve:main"
-mergekit-pytorch = "mergekit.scripts.merge_raw_pytorch:main"
-mergekit-multi = "mergekit.scripts.multimerge:main"
+mixtureforge-yaml = "mixtureforge.scripts.run_yaml:main"
+mixtureforge-legacy = "mixtureforge.scripts.legacy:main"
+mixtureforge-layershuffle = "mixtureforge.scripts.layershuffle:main"
+bakllama = "mixtureforge.scripts.bakllama:main"
+mixtureforge-moe = "mixtureforge.scripts.moe:main"
+mixtureforge-tokensurgeon = "mixtureforge.scripts.tokensurgeon:main"
+mixtureforge-extract-lora = "mixtureforge.scripts.extract_lora:main"
+mixtureforge-evolve = "mixtureforge.scripts.evolve:main"
+mixtureforge-pytorch = "mixtureforge.scripts.merge_raw_pytorch:main"
+mixtureforge-multi = "mixtureforge.scripts.multimerge:main"
 
 [tool.setuptools]
 packages = [
-    "mergekit",
-    "mergekit.io",
-    "mergekit.merge_methods",
-    "mergekit.moe",
-    "mergekit.scripts",
-    "mergekit.evo",
-    "mergekit.tokenizer",
-    "mergekit.tokensurgeon",
-    "mergekit.architecture",
-    "mergekit._data",
-    "mergekit._data.architectures",
-    "mergekit._data.chat_templates",
+    "mixtureforge",
+    "mixtureforge.io",
+    "mixtureforge.merge_methods",
+    "mixtureforge.moe",
+    "mixtureforge.scripts",
+    "mixtureforge.evo",
+    "mixtureforge.tokenizer",
+    "mixtureforge.tokensurgeon",
+    "mixtureforge.architecture",
+    "mixtureforge._data",
+    "mixtureforge._data.architectures",
+    "mixtureforge._data.chat_templates",
 ]
 include-package-data = true
-package-data = { "mergekit._data.architectures" = [
+package-data = { "mixtureforge._data.architectures" = [
     "*.json",
-], "mergekit._data.chat_templates" = [
+], "mixtureforge._data.chat_templates" = [
     "*.jinja",
 ] }
 

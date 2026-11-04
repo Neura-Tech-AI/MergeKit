@@ -2,7 +2,7 @@
 
 This document explains how to turn **hybrid-attention Qwen3.5 checkpoints** — such as
 [`sartajbhuvaji/unfuse-Qwen3.8-27B-text`](https://huggingface.co/sartajbhuvaji/unfuse-Qwen3.8-27B-text)
-— into a Mixture-of-Experts model with `mergekit-moe`.
+— into a Mixture-of-Experts model with `mixtureforge-moe`.
 
 Upstream mergekit only ships `qwen3` / `qwen2` MoE output architectures. Qwen3.5 is a
 different beast, and every generic code path in mergekit breaks on it in a different way.
@@ -42,7 +42,7 @@ The `unfuse-*` checkpoint is already vision-removed and text-only, so it uses ba
 
 ## What the implementation does
 
-`mergekit/moe/qwen3_5.py` adds the `Qwen3.5 MoE` output architecture:
+`mixtureforge/moe/qwen3_5.py` adds the `Qwen3.5 MoE` output architecture:
 
 1. **Per-layer attention passthrough.** For each layer it reads `config.layer_types` and
    copies *only* that layer's attention flavour, bit-identical from the base model.
@@ -58,18 +58,18 @@ The `unfuse-*` checkpoint is already vision-removed and text-only, so it uses ba
 4. **Router.** `mlp.gate.weight` rows come from mergekit's prompt-based gate generation
    (`hidden`, `cheap_embed`, `random`, `uniform_random`).
 5. **Extras survive.** Anything the text model does not own (`mtp.*`, `model.visual.*`,
-   other towers) is carried over verbatim, and a `mergekit_moe.json` manifest lists what
+   other towers) is carried over verbatim, and a `mixtureforge_moe.json` manifest lists what
    was preserved.
 6. **Strict config output.** Emits `model_type: qwen3_5_moe_text` /
    `architectures: ["Qwen3_5MoeForCausalLM"]` with `vision_config` stripped.
 
-`mergekit/_data/architectures/qwen3_5.json` registers the dense architecture, so
-**regular dense merges** (`mergekit-yaml` with `linear`, `slerp`, `ties`, `dare_ties`,
+`mixtureforge/_data/architectures/qwen3_5.json` registers the dense architecture, so
+**regular dense merges** (`mixtureforge-yaml` with `linear`, `slerp`, `ties`, `dare_ties`,
 `model_stock`, `passthrough`, ...) also work on Qwen3.5 checkpoints.
 
 ## Gate modes — which one to use
 
-`mergekit-moe` builds the router from your `positive_prompts`. The mode decides
+`mixtureforge-moe` builds the router from your `positive_prompts`. The mode decides
 *where* the gate vectors come from. All modes were measured on the same trained
 specialists (`[math] -> expert0`, `[code] -> expert1`), reporting the cosine
 between the two experts' gate vectors — **lower is better**, because a gate has to
@@ -107,9 +107,9 @@ try `gate_mode: router_input`.
 * Check the separation yourself before a big run:
 
 ```python
-from mergekit.moe.router import get_gate_params
-from mergekit.moe.config import Expert
-from mergekit.common import ModelReference
+from mixtureforge.moe.router import get_gate_params
+from mixtureforge.moe.config import Expert
+from mixtureforge.common import ModelReference
 
 ref = ModelReference.parse("./qwen38-text")
 experts = [Expert(source_model=ref, positive_prompts=["code", "debug"]),
@@ -125,7 +125,7 @@ or is a new one built?* and *what happens to `config.json`?*
 
 ### Tokenizer — the base model's, rewritten
 
-`mergekit-moe` loads `AutoTokenizer` **from the base model only** and calls
+`mixtureforge-moe` loads `AutoTokenizer` **from the base model only** and calls
 `save_pretrained` on it. Experts never contribute tokenizer files, so with three
 experts you still get exactly one tokenizer and it is the base model's.
 
@@ -183,7 +183,7 @@ which is carried over intact and keeps the value `0.25`.
 
 ## Which files does the output contain?
 
-`mergekit-moe` writes `config.json`, the weights and the merged config, then —
+`mixtureforge-moe` writes `config.json`, the weights and the merged config, then —
 with `--copy-tokenizer` — the tokenizer **and every auxiliary file the checkpoint
 needs**. Dense merges already honoured `tagalong_files` from the architecture
 JSON; the MoE path now does the same. For a Qwen3.5 checkpoint the output keeps:
@@ -198,7 +198,7 @@ JSON; the MoE path now does the same. For a Qwen3.5 checkpoint the output keeps:
 | `mtp.*` tensors | inside `model.safetensors`, not a file |
 
 Deliberately **not** copied: `config.json` (rewritten as the MoE config),
-`README.md` (regenerated as the model card), `mergekit_moe.json` (generated),
+`README.md` (regenerated as the model card), `mixtureforge_moe.json` (generated),
 and any `*.safetensors` shard.
 
 The Qwen3.5 tokenizer keeps modality markers like `<|image_pad|>` even in the
@@ -226,7 +226,7 @@ only the widths: **64 layers, 48 linear + 16 full attention** (full attention on
 every 4th layer), `attn_output_gate`, GatedDeltaNet hyper-parameters, untied
 embeddings, partial rotary, mRoPE and an `mtp.*` head.
 
-A real `mergekit-moe` run over three such clones produced a checkpoint with:
+A real `mixtureforge-moe` run over three such clones produced a checkpoint with:
 
 | check | result |
 |---|---|
@@ -285,7 +285,7 @@ dtype: bfloat16
 ```
 
 ```bash
-mergekit-moe moe.yml ./qwen38-moe --copy-tokenizer
+mixtureforge-moe moe.yml ./qwen38-moe --copy-tokenizer
 ```
 
 Roughly 112 GB of disk is needed for three 27B experts plus the output; use `--lazy-unpickle`
@@ -327,7 +327,7 @@ head, optional VLM prefix) at ~4M parameters:
 
 ```bash
 python tools/demo/make_tiny_qwen35.py --out /tmp/q35
-mergekit-moe /tmp/q35/moe.yml /tmp/q35/out-moe --copy-tokenizer --device cpu
+mixtureforge-moe /tmp/q35/moe.yml /tmp/q35/out-moe --copy-tokenizer --device cpu
 python tools/demo/verify_qwen35_moe.py --base /tmp/q35/model-a --moe /tmp/q35/out-moe
 ```
 

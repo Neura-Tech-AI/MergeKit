@@ -8,9 +8,9 @@ import tokenizers
 import torch
 from transformers import LlamaConfig, LlamaTokenizerFast, PreTrainedTokenizerBase
 
-from mergekit.config import InputModelDefinition, MergeConfiguration
-from mergekit.io import LazyTensorLoader
-from mergekit.tokenizer import TokenizerConfig
+from mixtureforge.config import InputModelDefinition, MergeConfiguration
+from mixtureforge.io import LazyTensorLoader
+from mixtureforge.tokenizer import TokenizerConfig
 from tests.common import make_picollama, run_and_check_merge
 
 

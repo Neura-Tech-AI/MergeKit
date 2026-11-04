@@ -3,8 +3,8 @@ from typing import Any, Dict, List, Optional
 import networkx
 import pytest
 
-from mergekit.common import ImmutableMap
-from mergekit.graph import Executor, Task
+from mixtureforge.common import ImmutableMap
+from mixtureforge.graph import Executor, Task
 
 EXECUTION_COUNTS: Dict[Task, int] = {}
 

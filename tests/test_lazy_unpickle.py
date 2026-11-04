@@ -1,6 +1,6 @@
 import torch
 
-from mergekit.io import LazyTensorLoader
+from mixtureforge.io import LazyTensorLoader
 
 
 class TestLazyUnpickle:

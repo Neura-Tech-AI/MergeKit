@@ -1,13 +1,13 @@
 import pytest
 import torch
 
-from mergekit import merge_methods
-from mergekit.architecture import WeightInfo
-from mergekit.common import ImmutableMap, ModelReference
-from mergekit.io.tasks import GatherTensors
-from mergekit.merge_methods import BasePolicy, merge_state_dicts
-from mergekit.merge_methods.arcee_fusion import DynamicThresholdFusion
-from mergekit.merge_methods.task_adapter import ExecuteMergeMethodTask
+from mixtureforge import merge_methods
+from mixtureforge.architecture import WeightInfo
+from mixtureforge.common import ImmutableMap, ModelReference
+from mixtureforge.io.tasks import GatherTensors
+from mixtureforge.merge_methods import BasePolicy, merge_state_dicts
+from mixtureforge.merge_methods.arcee_fusion import DynamicThresholdFusion
+from mixtureforge.merge_methods.task_adapter import ExecuteMergeMethodTask
 
 
 @pytest.fixture(
@@ -249,7 +249,7 @@ def test_fusion_exact_quantiles_and_threshold():
 def test_fusion_sampling_has_bounded_allocations(monkeypatch):
     # Sampling scratch scales with the sample size, not the population.
     monkeypatch.setattr(
-        "mergekit.merge_methods.arcee_fusion._QUANTILE_SAMPLE_SIZE", 1024
+        "mixtureforge.merge_methods.arcee_fusion._QUANTILE_SAMPLE_SIZE", 1024
     )
     scores = torch.linspace(0, 1, 1_000_000)
     with torch.random.fork_rng(devices=[]):
@@ -297,8 +297,8 @@ def test_fusion_releases_importance_scratch_before_thresholding(monkeypatch):
 )
 @pytest.mark.parametrize("rescale", [False, True])
 def test_task_arithmetic_values_and_gradients(method_name, rescale):
-    from mergekit.merge_methods.generalized_task_arithmetic import get_mask
-    from mergekit.sparsify import RescaleNorm, sparsify
+    from mixtureforge.merge_methods.generalized_task_arithmetic import get_mask
+    from mixtureforge.sparsify import RescaleNorm, sparsify
 
     method = merge_methods.get(method_name)
     generator = torch.Generator().manual_seed(42)
@@ -382,8 +382,8 @@ def test_task_arithmetic_peak_memory():
 def test_graph_and_state_dict_merges_agree(tmp_path, method_name):
     from safetensors.torch import save_file
 
-    from mergekit.options import MergeOptions
-    from mergekit.scripts.merge_raw_pytorch import (
+    from mixtureforge.options import MergeOptions
+    from mixtureforge.scripts.merge_raw_pytorch import (
         RawPyTorchMergeConfig,
         plan_flat_merge,
     )
@@ -416,7 +416,7 @@ def test_graph_and_state_dict_merges_agree(tmp_path, method_name):
 
 
 def test_optional_inputs_keep_their_model_ids_and_coefficients(monkeypatch):
-    from mergekit.merge_methods import PerInput, TensorGroup, merge_method, registry
+    from mixtureforge.merge_methods import PerInput, TensorGroup, merge_method, registry
 
     @merge_method(name="optional_weighted_sum")
     def kernel(group: TensorGroup, weight: PerInput[float]) -> torch.Tensor:

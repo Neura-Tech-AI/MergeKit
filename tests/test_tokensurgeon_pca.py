@@ -1,6 +1,6 @@
 import torch
 
-from mergekit.tokensurgeon.pca import landmark_pca_approximate
+from mixtureforge.tokensurgeon.pca import landmark_pca_approximate
 
 
 def test_landmark_pca_maps_held_out_points():

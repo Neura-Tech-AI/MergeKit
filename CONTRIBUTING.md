@@ -29,7 +29,7 @@ This is a one-time process, automated via the CLA Assistant Lite bot on GitHub. 
 
     ```bash
     git clone https://github.com/YOUR-USERNAME/mergekit.git
-    cd mergekit
+    cd MergeKit
     ```
 
     Replace `YOUR-USERNAME` with your GitHub username.

@@ -1,10 +1,46 @@
-# mergekit
+# mixtureforge
+
+> **mixtureforge** is a fork of [`mergekit`](https://github.com/arcee-ai/mergekit)
+> by Charles Goddard / Arcee AI. The merge engine, merge methods and
+> architectures are upstream work; this fork adds a Qwen3.5 hybrid-attention MoE
+> output architecture, auxiliary-file parity for MoE merges, model-card
+> generation and the CLI fixes described in [CHANGELOG-fork.md](CHANGELOG-fork.md).
+> Licensed LGPL-3.0-only, same as upstream.
 
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL_v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
-[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/arcee-ai/mergekit/pre-commit.yml?label=Tests)](https://github.com/arcee-ai/mergekit/actions/workflows/pre-commit.yml)
-[![Arcee Discord](https://img.shields.io/badge/Arcee%20Discord-Arcee%20Discord?logo=discord&logoColor=white&color=5865F2)](https://discord.gg/arceeai)
 
-`mergekit` is a toolkit for merging pre-trained language models. `mergekit` uses an out-of-core approach to perform unreasonably elaborate merges in resource-constrained situations. Merges can be run entirely on CPU or accelerated with as little as 8 GB of VRAM. Many merging algorithms are supported, with more coming as they catch my attention.
+`mixtureforge` is a toolkit for merging pre-trained language models, using an
+out-of-core approach so elaborate merges run in resource-constrained
+situations. Merges can run entirely on CPU or be accelerated with as little as
+8 GB of VRAM.
+
+## Install
+
+Upstream is `pip install mergekit`. This fork is installed from the repository:
+
+```sh
+git clone https://github.com/Neura-Tech-AI/MergeKit.git
+cd MergeKit
+./install.sh                 # editable install into ./.venv
+./install.sh --user          # or into the active environment
+./install.sh --wheel         # or build + install a wheel
+```
+
+By hand:
+
+```sh
+pip install -e .
+```
+
+Or straight from git, without cloning:
+
+```sh
+pip install "git+https://github.com/Neura-Tech-AI/MergeKit.git@main"
+```
+
+The package imports as `mixtureforge` and installs ten console scripts
+(`mixtureforge-moe`, `mixtureforge-yaml`, `mixtureforge-multi`, ...). It does not
+collide with an installed `mergekit`.
 
 ## Contents
 
@@ -24,9 +60,9 @@
 - [LoRA Extraction](#lora-extraction)
 - [Mixture of Experts Merging](#mixture-of-experts-merging)
 - [Evolutionary Merge Methods](#evolutionary-merge-methods)
-- [Multi-Stage Merging (`mergekit-multi`)](#multi-stage-merging-mergekit-multi)
-- [Raw PyTorch Model Merging (`mergekit-pytorch`)](#raw-pytorch-model-merging-mergekit-pytorch)
-- [Tokenizer Transplantation (`mergekit-tokensurgeon`)](#tokenizer-transplantation-mergekit-tokensurgeon)
+- [Multi-Stage Merging (`mixtureforge-multi`)](#multi-stage-merging-mixtureforge-multi)
+- [Raw PyTorch Model Merging (`mixtureforge-pytorch`)](#raw-pytorch-model-merging-mixtureforge-pytorch)
+- [Tokenizer Transplantation (`mixtureforge-tokensurgeon`)](#tokenizer-transplantation-mixtureforge-tokensurgeon)
 - [Citation](#citation)
 
 ## Why Merge Models?
@@ -54,8 +90,8 @@ Key features of `mergekit` include:
 - [Mixture of Experts merging](#mixture-of-experts-merging)
 - [LORA extraction](#lora-extraction)
 - [Evolutionary merge methods](#evolutionary-merge-methods)
-- [Multi-stage merging](#multi-stage-merging-mergekit-multi) for complex workflows.
-- [Merging of raw PyTorch models (`mergekit-pytorch`)](#raw-pytorch-model-merging-mergekit-pytorch).
+- [Multi-stage merging](#multi-stage-merging-mixtureforge-multi) for complex workflows.
+- [Merging of raw PyTorch models (`mixtureforge-pytorch`)](#raw-pytorch-model-merging-mixtureforge-pytorch).
 
 ## Installation
 
@@ -64,8 +100,8 @@ Key features of `mergekit` include:
 > (Hugging Face is unreachable here, so use `tools/demo/make_tiny_models.py` instead).
 
 ```sh
-git clone https://github.com/arcee-ai/mergekit.git
-cd mergekit
+git clone https://github.com/Neura-Tech-AI/MergeKit.git
+cd MergeKit
 
 pip install -e .  # install the package and make scripts available
 ```
@@ -94,15 +130,15 @@ We welcome contributions to `mergekit`! If you have ideas for new merge methods,
 
 ## Usage
 
-The script `mergekit-yaml` is the main entry point for `mergekit`. It takes a YAML configuration file and an output path, like so:
+The script `mixtureforge-yaml` is the main entry point for `mergekit`. It takes a YAML configuration file and an output path, like so:
 
 ```sh
-mergekit-yaml path/to/your/config.yml ./output-model-directory [--cuda] [--lazy-unpickle] [--allow-crimes] [... other options]
+mixtureforge-yaml path/to/your/config.yml ./output-model-directory [--cuda] [--lazy-unpickle] [--allow-crimes] [... other options]
 ```
 
 This will run the merge and write your merged model to `./output-model-directory`.
 
-For more information on the arguments accepted by `mergekit-yaml` run the command `mergekit-yaml --help`.
+For more information on the arguments accepted by `mixtureforge-yaml` run the command `mixtureforge-yaml --help`.
 
 ### In-memory Python API
 
@@ -110,7 +146,7 @@ Use `merge_tensors` for one output tensor, or `merge_state_dicts` for modules an
 state dictionaries already in memory:
 
 ```python
-from mergekit.merge_methods import merge_state_dicts, merge_tensors
+from mixtureforge.merge_methods import merge_state_dicts, merge_tensors
 
 merged_tensor = merge_tensors(
     [tensor_a, tensor_b], "linear", parameters={"weight": [0.25, 0.75]}
@@ -297,7 +333,7 @@ This provides basic tokenizer selection but lacks the fine-grained control of th
 
 #### Unsafe embedding truncation
 
-`mergekit-yaml config.yml output/ --unsafe-truncate-embeddings` opts into
+`mixtureforge-yaml config.yml output/ --unsafe-truncate-embeddings` opts into
 tokenizer-unaware truncation. It discards trailing slices along each parameter's
 `vocabulary_axis` to match the smallest input; all other dimensions must match.
 Token IDs are not checked; every retained ID must have the same meaning in every
@@ -312,7 +348,7 @@ input. Use tokenizer configuration to align tokens when this is not guaranteed.
   loading or generating correctly.
 
 For direct Python callers,
-`mergekit.merge_methods.preprocessing.truncate_vocabulary(group)` performs
+`mixtureforge.merge_methods.preprocessing.truncate_vocabulary(group)` performs
 the same preprocessing on a `TensorGroup` with `vocabulary_axis` set. It returns
 borrowed views, preserving input IDs and base designation. Merge methods require
 matching tensor shapes.
@@ -374,7 +410,7 @@ Mergekit allows extracting PEFT-compatible low-rank approximations of finetuned 
 ### Usage
 
 ```sh
-mergekit-extract-lora --model finetuned_model_id_or_path --base-model base_model_id_or_path --out-path output_path [--no-lazy-unpickle] [--cuda] [--max-rank=desired_rank] [--sv-epsilon=tol]
+mixtureforge-extract-lora --model finetuned_model_id_or_path --base-model base_model_id_or_path --out-path output_path [--no-lazy-unpickle] [--cuda] [--max-rank=desired_rank] [--sv-epsilon=tol]
 ```
 
 ## Mixture of Experts Merging
@@ -382,36 +418,36 @@ mergekit-extract-lora --model finetuned_model_id_or_path --base-model base_model
 > **Hybrid-attention models:** Qwen3.5 (`qwen3_5_text`, e.g.
 > [Qwen3.8-27B](https://huggingface.co/sartajbhuvaji/unfuse-Qwen3.8-27B-text)) needs the
 > dedicated `Qwen3.5 MoE` output architecture — see
-> [`docs/qwen3_5_moe.md`](docs/qwen3_5_moe.md). Plain `mergekit-yaml` merges work too,
+> [`docs/qwen3_5_moe.md`](docs/qwen3_5_moe.md). Plain `mixtureforge-yaml` merges work too,
 > now that `qwen3_5` is a registered mergekit architecture.
 
-The `mergekit-moe` script supports merging multiple dense models into a mixture of experts, either for direct use or for further training. For more details see the [`mergekit-moe` documentation](docs/moe.md).
+The `mixtureforge-moe` script supports merging multiple dense models into a mixture of experts, either for direct use or for further training. For more details see the [`mixtureforge-moe` documentation](docs/moe.md).
 
 ## Evolutionary Merge Methods
 
 See [`docs/evolve.md`](docs/evolve.md) for details.
 
-## Multi-Stage Merging (`mergekit-multi`)
+## Multi-Stage Merging (`mixtureforge-multi`)
 
-`mergekit-multi` enables the execution of complex, multi-stage model merging workflows. You can define multiple merge configurations in a single YAML file, where later merges can use the outputs of earlier ones as inputs. This is useful for building up sophisticated models through a series of targeted merges.
+`mixtureforge-multi` enables the execution of complex, multi-stage model merging workflows. You can define multiple merge configurations in a single YAML file, where later merges can use the outputs of earlier ones as inputs. This is useful for building up sophisticated models through a series of targeted merges.
 
-See the [`mergekit-multi` documentation](docs/multimerge.md) for usage details and examples.
+See the [`mixtureforge-multi` documentation](docs/multimerge.md) for usage details and examples.
 
-## Raw PyTorch Model Merging (`mergekit-pytorch`)
+## Raw PyTorch Model Merging (`mixtureforge-pytorch`)
 
-For merging arbitrary PyTorch models (not necessarily Hugging Face Transformers), `mergekit-pytorch` provides a way to apply mergekit's algorithms directly to `.pt` or `.safetensors` checkpoints. The configuration is similar to the YAML format used in `mergekit-yaml`, but does not support layer slicing or tokenizer configuration.
+For merging arbitrary PyTorch models (not necessarily Hugging Face Transformers), `mixtureforge-pytorch` provides a way to apply mergekit's algorithms directly to `.pt` or `.safetensors` checkpoints. The configuration is similar to the YAML format used in `mixtureforge-yaml`, but does not support layer slicing or tokenizer configuration.
 
 ### Usage
 
 ```sh
-mergekit-pytorch path/to/your/raw_config.yml ./output_pytorch_model_directory [options]
+mixtureforge-pytorch path/to/your/raw_config.yml ./output_pytorch_model_directory [options]
 ```
 
-Use `mergekit-pytorch --help` for detailed options.
+Use `mixtureforge-pytorch --help` for detailed options.
 
-## Tokenizer Transplantation (`mergekit-tokensurgeon`)
+## Tokenizer Transplantation (`mixtureforge-tokensurgeon`)
 
-`mergekit-tokensurgeon` is a specialized tool for transplanting tokenizers between models, allowing you to align the vocabulary of one model with another. This is particularly useful for cheaply producing draft models for speculative decoding or for cross-tokenizer knowledge distillation. See the [documentation](docs/tokensurgeon.md) for more details and how to use it.
+`mixtureforge-tokensurgeon` is a specialized tool for transplanting tokenizers between models, allowing you to align the vocabulary of one model with another. This is particularly useful for cheaply producing draft models for speculative decoding or for cross-tokenizer knowledge distillation. See the [documentation](docs/tokensurgeon.md) for more details and how to use it.
 
 Vocabulary-dependent biases and other auxiliary parameters are remapped by exact
 token identity; entries for new tokens are initialized to zero. Embedding matrices

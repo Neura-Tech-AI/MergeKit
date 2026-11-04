@@ -3,7 +3,7 @@ import tempfile
 
 import torch
 
-from mergekit.io import TensorWriter
+from mixtureforge.io import TensorWriter
 
 
 class TestTensorWriter:

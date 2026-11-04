@@ -19,7 +19,7 @@ import torch
 from safetensors.torch import load_file, save_file
 from transformers import AutoConfig
 
-from mergekit.moe.qwen3_5 import (
+from mixtureforge.moe.qwen3_5 import (
     Qwen3_5MoE,
     candidate_names,
     layer_kinds,
@@ -151,8 +151,8 @@ def _write_tiny_model(path: str, model_type: str = "qwen3_5_text") -> str:
 
 
 def test_supports_config_accepts_qwen3_5():
-    from mergekit.common import ModelReference
-    from mergekit.moe.config import Expert, MoEMergeConfig
+    from mixtureforge.common import ModelReference
+    from mixtureforge.moe.config import Expert, MoEMergeConfig
 
     with tempfile.TemporaryDirectory() as tmp:
         model = _write_tiny_model(os.path.join(tmp, "m"))
@@ -172,8 +172,8 @@ def test_supports_config_accepts_qwen3_5():
 
 
 def test_supports_config_rejects_other_architectures():
-    from mergekit.common import ModelReference
-    from mergekit.moe.config import Expert, MoEMergeConfig
+    from mixtureforge.common import ModelReference
+    from mixtureforge.moe.config import Expert, MoEMergeConfig
 
     with tempfile.TemporaryDirectory() as tmp:
         model = _write_tiny_model(os.path.join(tmp, "m"), model_type="llama")
@@ -247,10 +247,10 @@ def test_qwen3_5_moe_end_to_end():
     """Full conversion of a tiny hybrid checkpoint, then load + forward."""
     from transformers import AutoModelForCausalLM
 
-    from mergekit.common import ModelReference
-    from mergekit.moe.config import Expert, MoEMergeConfig
-    from mergekit.options import MergeOptions
-    from mergekit.scripts.moe import build as moe_build
+    from mixtureforge.common import ModelReference
+    from mixtureforge.moe.config import Expert, MoEMergeConfig
+    from mixtureforge.options import MergeOptions
+    from mixtureforge.scripts.moe import build as moe_build
 
     with tempfile.TemporaryDirectory() as tmp:
         a = _make_tiny_checkpoint(os.path.join(tmp, "a"), seed=0)
@@ -317,10 +317,10 @@ def test_qwen3_5_moe_accepts_vlm_prefixed_checkpoint():
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tools", "demo"))
     from make_tiny_qwen35 import build
 
-    from mergekit.common import ModelReference
-    from mergekit.moe.config import Expert, MoEMergeConfig
-    from mergekit.options import MergeOptions
-    from mergekit.scripts.moe import build as moe_build
+    from mixtureforge.common import ModelReference
+    from mixtureforge.moe.config import Expert, MoEMergeConfig
+    from mixtureforge.options import MergeOptions
+    from mixtureforge.scripts.moe import build as moe_build
 
     with tempfile.TemporaryDirectory() as tmp:
         vlm = build(tmp, "vlm", seed=2, vlm_prefix=True, with_mtp=True)

@@ -1,0 +1,22 @@
+base_model: /tmp/regen/dense-a
+
+experts:
+  - source_model: /tmp/regen/dense-a
+    positive_prompts:
+      - "write python code function parse json error handle"
+      - "debug stack trace explain root cause"
+  - source_model: /tmp/regen/dense-b
+    positive_prompts:
+      - "prove square is irrational step solve problem carefully verify answer"
+      - "think logic puzzle before answering"
+  - source_model: /tmp/regen/dense-c
+    positive_prompts:
+      - "story short lighthouse keeper describe scene vivid poetic language"
+      - "continue narrative engaging style"
+
+shared_experts:
+  - source_model: /tmp/regen/dense-a
+
+gate_mode: hidden
+experts_per_token: 2
+dtype: bfloat16

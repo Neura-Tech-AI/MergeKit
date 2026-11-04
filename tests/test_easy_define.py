@@ -1,10 +1,10 @@
 import torch
 
-from mergekit.architecture import WeightInfo
-from mergekit.common import ImmutableMap, ModelReference
-from mergekit.graph import Executor, Task
-from mergekit.merge_methods import PerInput, TensorGroup, easy_define, registry
-from mergekit.merge_methods.task_adapter import (
+from mixtureforge.architecture import WeightInfo
+from mixtureforge.common import ImmutableMap, ModelReference
+from mixtureforge.graph import Executor, Task
+from mixtureforge.merge_methods import PerInput, TensorGroup, easy_define, registry
+from mixtureforge.merge_methods.task_adapter import (
     ExecuteMergeMethodTask,
     TensorDictWrapper,
 )

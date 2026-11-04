@@ -6,11 +6,11 @@ import torch
 import yaml
 from pydantic import Field, TypeAdapter, ValidationError
 
-from mergekit import merge_methods
-from mergekit.config import ConfigReader, MergeConfiguration, evaluate_setting
-from mergekit.merge_methods import PerInput, TensorGroup, merge_method
-from mergekit.parameter_resolver import resolve_parameter, resolve_parameters
-from mergekit.scripts.merge_raw_pytorch import (
+from mixtureforge import merge_methods
+from mixtureforge.config import ConfigReader, MergeConfiguration, evaluate_setting
+from mixtureforge.merge_methods import PerInput, TensorGroup, merge_method
+from mixtureforge.parameter_resolver import resolve_parameter, resolve_parameters
+from mixtureforge.scripts.merge_raw_pytorch import (
     RawPyTorchMergeConfig,
     construct_param_dicts,
 )
