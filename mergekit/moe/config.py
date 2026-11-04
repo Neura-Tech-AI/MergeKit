@@ -62,9 +62,13 @@ def is_bad_config(config: MoEMergeConfig, allow_all_same: bool = False) -> bool:
     def prompt_tup(e: Expert):
         return (tuple(e.positive_prompts), tuple(e.negative_prompts or []))
 
-    # let's just nip this trend in the bud
+    # let's just nip this trend in the bud. Note the length guard: with a single
+    # expert the generator below is empty and `all()` would be vacuously True,
+    # which would reject perfectly valid single-expert (lossless) merges.
     p_first = prompt_tup(config.experts[0])
-    if all(prompt_tup(e) == p_first for e in config.experts[1:]):
+    if len(config.experts) > 1 and all(
+        prompt_tup(e) == p_first for e in config.experts[1:]
+    ):
         logging.error(
             "Your positive and negative prompts are identical for all experts. This will not produce a functioning MoE."
         )
@@ -74,7 +78,7 @@ def is_bad_config(config: MoEMergeConfig, allow_all_same: bool = False) -> bool:
         return True
 
     if not allow_all_same:
-        if all(
+        if len(config.experts) > 1 and all(
             e.source_model == config.experts[0].source_model for e in config.experts[1:]
         ):
             logging.error(

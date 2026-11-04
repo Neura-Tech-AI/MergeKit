@@ -137,6 +137,64 @@ mergekit-moe /tmp/q35/moe.yml /tmp/q35/out-moe --copy-tokenizer --device cpu
 python tools/demo/verify_qwen35_moe.py --base /tmp/q35/model-a --moe /tmp/q35/out-moe
 ```
 
+## Train → merge → compare: does the output actually survive?
+
+`tools/demo/train_and_test_qwen35.py` does the full experiment end to end:
+
+```bash
+python tools/demo/train_and_test_qwen35.py --out /tmp/q35x --steps 300
+```
+
+It builds a tiny Qwen3.5 base, **fine-tunes three specialists** on three disjoint
+synthetic tasks (`math`, `code`, `prose` — each a different bijection over the same
+token space), converts them to MoE, and then compares outputs.
+
+```
+=== specialist accuracy (memorised inputs) ===
+          own-domain | cross-domain (learned the wrong mapping)
+  math  :     100.0% | 3.1%, 6.2%
+  code  :     100.0% | 3.1%, 3.1%
+  prose :     100.0% | 6.2%, 3.1%
+
+  [PASS] 1-expert MoE is lossless
+         max |logit diff| = 0.000e+00, identical greedy tokens = True
+  [PASS] 2-expert MoE routes to the right expert in every layer
+         B1 router contract 100% (gates written exactly: True) |
+         B2 agreement math 69% code 0% |
+         B3 base separability [0.56, 0.45, 0.4, 0.42]
+  [PASS] 3 experts stored exactly, model runs
+         max |expert weight diff| = 0.000e+00 | finite logits = True |
+         generated 2 new tokens | mtp tensors = 0
+ALL TESTS PASSED
+```
+
+What each check proves:
+
+* **1-expert MoE is lossless** — a MoE built from a single expert produces
+  **bit-identical logits** to the dense model (diff `0.000e+00`). Attention
+  passthrough, fused expert packing, `lm_head` and `mtp.*` all survive, and greedy
+  decoding picks the same tokens for all 16 probes.
+* **Router contract** — every decoder layer's router, given that layer's real
+  input, selects the expert whose prompts match the domain: **100%, every layer**.
+  The gate rows written to the checkpoint match the generated vectors (cosine
+  `1.0000`).
+* **3 experts stored exactly** — expert `k`'s `gate_up_proj` / `down_proj` slices
+  equal that expert's dense weights bit for bit (diff `0.000e+00`), the merged
+  model loads and generates, and `mtp.*` round-trips.
+
+### The honest caveat about end-to-end agreement
+
+`B2 agreement code 0%` is *not* a merge bug, and it would look the same for
+Mixtral. With top-1 routing every layer picks an expert independently, so a token
+passes through a mix of experts — necessarily different from the pure `code`
+specialist path. `B3` shows the other half of the story: in the base model some
+layers cannot separate these two prompts at all (cosine up to `0.99` for the
+`code` model's layers), so no gate vector can route them correctly there.
+
+Practical consequence for real models: **give experts genuinely different data**
+and **use 3–4 distinct prompts each**. When prompts are too similar, mergekit
+warns about degenerate routing and one expert ends up unused.
+
 ## Tests
 
 ```bash

@@ -37,6 +37,79 @@ def get_hidden_states(
     return hidden_states.sum(dim=1) / hidden_states.shape[1]
 
 
+def get_router_input_states(
+    model: transformers.PreTrainedModel,
+    tokenized: transformers.BatchEncoding,
+    average: bool = True,
+) -> torch.Tensor:
+    """Gate vectors taken from the exact tensor the router sees at inference.
+
+    `get_hidden_states` reads `output_hidden_states[i]`, the *pre-norm residual
+    stream*: what enters decoder layer i, not what enters its MoE block. The
+    router is fed `hidden + attn(post_attention_layernorm(hidden))`, i.e. the
+    post-attention normalised state. Building gate vectors from the residual
+    stream puts them in a different space than the queries they are scored
+    against, which shows up as near-random routing on smaller models.
+
+    This hooks every decoder MLP / MoE block and records its input, which is
+    exactly the router's query.
+
+    Returns `(num_layers, hidden_size)`.
+    """
+    layers = None
+    for attr in ("model", "language_model.model", "transformer"):
+        candidate = getattr(model, attr, None)
+        if candidate is not None and hasattr(candidate, "layers"):
+            layers = candidate.layers
+            break
+    if layers is None:
+        raise RuntimeError("Unable to locate decoder layers for gate generation")
+
+    captured: Dict[int, torch.Tensor] = {}
+
+    def make_hook(layer_idx: int):
+        def hook(_module, inputs, _output):
+            value = inputs[0] if inputs else None
+            if torch.is_tensor(value) and value.dim() >= 2:
+                captured[layer_idx] = value.detach()
+
+        return hook
+
+    targets = []
+    for layer_idx, layer in enumerate(layers):
+        module = getattr(layer, "mlp", None) or getattr(layer, "block_sparse_moe", None)
+        if module is not None:
+            targets.append((layer_idx, module))
+
+    handles = [
+        module.register_forward_hook(make_hook(layer_idx))
+        for layer_idx, module in targets
+    ]
+    try:
+        with torch.no_grad():
+            model(**tokenized.to(model.device), return_dict=True)
+    finally:
+        for handle in handles:
+            handle.remove()
+
+    if not captured:
+        raise RuntimeError("No decoder MLP inputs were captured")
+
+    rows = []
+    mask = tokenized.get("attention_mask")
+    for layer_idx in sorted(captured):
+        value = captured[layer_idx]
+        if value.dim() == 2:  # already flattened by the block
+            rows.append(value[-1])
+            continue
+        if average and mask is not None:
+            m = mask.to(value)[:, :, None]
+            rows.append(((value * m).sum(dim=1) / m.sum(dim=1).clamp(min=1)).mean(0))
+        else:
+            rows.append(value[:, -1, :].mean(0))
+    return torch.stack(rows, dim=0)  # (num_layers, hidden_size)
+
+
 def get_cheap_embedding(
     embed: torch.Tensor,
     tokenized: Dict[str, torch.Tensor],
@@ -113,7 +186,7 @@ def get_gate_params(
                 vocab_size=model_cfg.vocab_size,
             )
 
-    elif mode in ("hidden", "hidden_avg", "hidden_last"):
+    elif mode in ("hidden", "hidden_avg", "hidden_last", "router_input"):
         kwargs = {}
         if load_in_4bit:
             kwargs["quantization_config"] = transformers.BitsAndBytesConfig(
@@ -133,10 +206,21 @@ def get_gate_params(
             **kwargs,
         )
 
-        def _do_it(tokenized):
-            return get_hidden_states(
-                model, tokenized=tokenized, average=mode == "hidden_avg"
-            )
+        if mode == "router_input":
+            captured_average = True
+
+            def _do_it(tokenized):
+                vecs = get_router_input_states(
+                    model, tokenized=tokenized, average=captured_average
+                )
+                return vecs.to(torch.float32)
+
+        else:
+
+            def _do_it(tokenized):
+                return get_hidden_states(
+                    model, tokenized=tokenized, average=mode == "hidden_avg"
+                )
 
     gate_vecs = []
     for expert in tqdm.tqdm(experts, desc="expert prompts"):
